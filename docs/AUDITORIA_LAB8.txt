@@ -1,0 +1,76 @@
+AUDITORÍA DE REUTILIZACIÓN — 03/11/2026
+
+Fuentes: blobs del commit d4b159c57e208a8a433ff6ac97b3b94098518aa0,
+CHECKLIST_FINAL.json de la entrega Lab 8, consigna actualizada al 01/11/2026
+y propuesta PDF recibida. No se repitieron tests, builds ni despliegues del Lab 8.
+
+Código / comprobación / reutilización / brecha:
+
+1. pow/blockchain.py: Block/header/compute_hash, mine y génesis determinista existentes.
+DIFFICULTY=3 global; bloque no compromete dificultad; validate_chain verifica estructura,
+hash, enlaces, índice, nonce y génesis. choose_best_chain levanta NotImplementedError.
+Reutilizar patrón de bloque/JSON/SHA-256 y enfoque de validación. Extender formato y reglas;
+no aceptar cadenas antiguas como si usaran el protocolo nuevo.
+
+2. pow/node.py: API FastAPI healthz/metrics/chain/tx/mine; PEERS leído pero no utilizado.
+Mempool en lista de memoria; sin firmas, identificadores de replay ni persistencia de pendientes.
+Lock threading dentro de un proceso y un escritor por DATA_DIR. /mine devuelve 409 ocupado;
+solo borra pendientes tras escritura exitosa. Escritura temporal+flush+fsync+replace; no
+fsync de directorio explícito. Corrupción no se reemplaza silenciosamente por génesis.
+Reutilizar diseño de errores y escritura; adaptar a snapshot de estado y minado fuera del
+lock con verificación de tip. No importar sus globals ni usar DATA_DIR de otros trabajos.
+
+3. Tests de Lab 8: antecedente de 56 PASS informado en entrega; aquí se conserva el
+checklist, no se atribuyen esos resultados al nuevo motor. Cambiar formato/protocolo exige
+tests nuevos. No hay prueba del TFI de concurrencia, recuperación ni convergencia aún.
+
+4. Docker/Compose: pow usa Python 3.12-slim (tag, no digest), corre como root por defecto,
+requisitos directos fijados. Revisar identidad no root, .dockerignore, hashes/lock de
+dependencias y digest antes del futuro build. Compose de Anvil no implementa esta red.
+
+5. Helm: chart pow tiene StatefulSet, PVC RWO por réplica, Service/headless, probes,
+resources y PEERS por DNS (incluye self). Son bases útiles; no implementan descubrimiento,
+sincronización ni consenso de la aplicación. Lab 8 verificó tres cadenas independientes.
+
+6. Observabilidad: pow_block_height disponible en Lab 8; ServiceMonitor/dashboard reutilizables.
+El antecedente de Grafana 41545209352 corresponde a procesos PoW aislados, no a Grafana
+dentro del despliegue Kubernetes. No se usará como evidencia nueva del TFI.
+
+7. Terraform/OpenTofu: módulos GKE, red y Artifact Registry existentes. envs/dev conecta
+VM opcional, registry con nombre infra-cloud-template y prefijo infra-cloud-dev. No es
+seguro aplicarlo tal cual en el TFI. GKE utiliza proveedor ~>5.0, canal REGULAR, scope
+cloud-platform, sin service account explícita en ese módulo y deletion_protection=false.
+Revisar versión, IAM, endpoint y costos; preparar estado/proyecto exclusivos.
+
+8. CI: ci.yml del commit base prueba varios servicios y construye/publica app/model/pow;
+la publicación se asocia a push main/tags. No conviene activarlo para el nuevo proyecto:
+alcance excesivo respecto de una sola imagen y ausencia de autorización remota nueva.
+La publicación histórica PoW usa su rama autorizada clase8/publicacion-pow. El provider
+existente no debe ampliarse para este TFI sin aprobación explícita.
+
+9. Contratos Foundry Counter: pertenecen a prácticas EVM. El motor educativo PoW de este
+caso no exige desplegar Counter, MetaMask, Sepolia ni Base Sepolia. No reutilizar Lab 7.
+
+10. Licencia y procedencia: no se encontró LICENSE raíz en ls-tree del commit seleccionado.
+forge-std tiene sus propias licencias; no atribuirlas automáticamente a pow o al template.
+Se conserva la autoría y referencia de cátedra. Confirmar términos antes de publicación.
+
+CAMBIOS DE CONSIGNA/PROPUESTA
+- Consigna nueva: propuesta 10/11, final 20/12; prevalece sobre fechas anteriores.
+- Añade justificación explícita de confianza y verificación externa.
+- Exige cargas 1/2/5/10. Mantener 50/150 como adicionales; no duplicar 10.
+- GKE sigue siendo obligatorio; dos nodos blockchain mínimos no equivalen a dos workers.
+- La propuesta PDF se conserva sin editar. El pie indica 31/10/2026, mientras la orden
+  menciona 30/10/2026: registrar ambos, no inventar constancia de aprobación docente.
+- La propuesta refiere tiempo de minado observado para retarget. Para acuerdo entre nodos,
+  el algoritmo implementado usa intervalos de timestamps de cadena; duración local solo métrica.
+- Consigna ejemplifica cadena más larga; diseño solicitado usa mayor trabajo acumulado.
+  Explicitar esta elección ante la cátedra, especialmente en sincronización.
+- QR temporal se incluye en el plan nuevo como backend; DApp de consulta corresponde a Curso 4.
+
+DEPENDENCIAS
+Baseline: FastAPI 0.115.0, uvicorn[standard] 0.30.6, prometheus_client 0.21.0,
+Pydantic 2.9.2. Son referencias, no una recomendación actual de seguridad.
+Motor inicial TFI: biblioteca estándar Python 3.12. Tests: pytest 8.3.5 y dependencias
+copiadas de instalación existente a directorio aislado. Antes del HTTP elegir/fijar
+dependencias y revisar avisos oficiales; no descargar ni actualizar a ciegas.

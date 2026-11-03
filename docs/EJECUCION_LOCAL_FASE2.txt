@@ -1,0 +1,55 @@
+EJECUCIÓN LOCAL — REVISAR RESULTADOS_FASE2.json ANTES DE ASUMIR QUE ESTÁ VERIFICADA
+
+No despliegues, Docker, Kubernetes ni cloud. Preparación de dependencias local:
+tools/prepare_phase2.py copia exclusivamente paquetes ya instalados a .runtime/runtime-tools.
+Conserva el manifiesto del motor aprobado antes de implementar adaptadores.
+En otro equipo usar Python 3.12 y un entorno independiente con requirements-node.txt
+y requirements-test.txt. No usar configuraciones/credenciales de otros laboratorios.
+
+Ejemplo de configuración (archivo dentro de un nuevo directorio de datos del TFI):
+{
+  "node_id":"node-0",
+  "data_dir":"RUTA_ABSOLUTA_EXCLUSIVA_DEL_NODO_0",
+  "port":19880,
+  "peers":["http://127.0.0.1:19881","http://127.0.0.1:19882"],
+  "network":{},
+  "sync_interval_seconds":3.0,
+  "max_pending":256
+}
+Crear otras configuraciones con identidad, directorio y puerto distintos, pero network
+idéntico. Verificar puertos libres antes de iniciar. Las configuraciones de tests eligen
+puertos efímeros libres; nunca usan 8080/8545 ni clústeres previos.
+
+Comando del servidor: python -B -m node --config RUTA_AL_JSON
+Solo iniciar manualmente tras medir RAM y reservar presupuesto. No hay autoarranque.
+El launcher fija 127.0.0.1, un worker y sin recarga. En el entorno local actual las
+dependencias están en .runtime/runtime-tools y .runtime/test-tools; incluir esas rutas
+en PYTHONPATH junto a la raíz del proyecto, y PYTHONDONTWRITEBYTECODE=1.
+
+Pruebas: una selección exacta por proceso. Ejemplo:
+python -B tools/run_phase2_test.py tests/unit/test_phase2.py::test_atomic_restart_preserves_chain_and_mempool
+El supervisor fija PYTHONPATH, no cambia entornos anteriores. Detener el lote ante fallo
+y revisar logs antes de otra selección. No hay reruns automáticos.
+
+Unitarios: 12 s, memoria de proceso 192 MiB, pila a los 6 s, >=640 MiB disponibles
+al inicio, interrupción si Windows baja de 384 MiB.
+Integración: un escenario por proceso controlador; tres procesos de nodo simultáneos
+porque es imprescindible para la prueba. Timeout global 90 s; >=1 GiB al inicio;
+192 MiB por proceso (Job Object heredado por cada nodo), mismo piso de memoria.
+El controlador mide cada nodo. Proxies HTTP de prueba en threads del controlador
+introducen fallos de transporte reales; no escriben la cadena de los nodos.
+
+Escenario A: propagación, arranque tardío, estado y mempool después de caída/reinicio,
+partición, divergencia, reconvergencia, tx huérfana, replay, cadena inválida y métricas.
+Escenario B: tres forks válidos preminados de forma reproducible como fixtures iniciales;
+los tres procesos reales cargan sus propios snapshots y resuelven por trabajo/desempate.
+Se comparan TODOS los bloques recuperados por HTTP, además de altura, tip y trabajo.
+
+El directorio persistente es el equivalente lógico del almacenamiento del nodo. No
+se etiqueta como prueba de PVC real. Se conservan archivos state.json, configuración,
+logs, PIDs, cronología, checksums y muestras de memoria en cada ejecución.
+
+Al cerrar cada escenario, terminar únicamente procesos hijos propios, cerrar proxies
+y comprobar cero procesos activos en su Job. El apagado abrupto tras confirmación de
+escritura modela pérdida del proceso; no modela corte eléctrico ni corrupción del disco.
+No tocar Docker, WSL2, volúmenes ni servicios de otros proyectos.

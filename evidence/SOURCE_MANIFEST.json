@@ -1,0 +1,241 @@
+{
+  "captured_utc": "2026-11-03T14:55:54.876542+00:00",
+  "baseline_commit": "d4b159c57e208a8a433ff6ac97b3b94098518aa0",
+  "sources": [
+    {
+      "source": "C:\\Users\\hp-produccion\\.codex\\attachments\\5a90f494-97d0-49a7-983d-31e80233cc61\\Texto pegado.txt",
+      "copy": "evidence/sources/consigna-oficial-20261101.txt",
+      "sha256": "402132b31f188b096e4d79b082b753ce55e13e4c29236f697ef3feee8fe136c0"
+    },
+    {
+      "source": "C:\\Users\\hp-produccion\\.codex\\attachments\\49278dff-3056-4eb2-a611-20abbde3da02\\Texto pegado.txt",
+      "copy": "evidence/sources/instrucciones-tfi.txt",
+      "sha256": "a08e99d25d046a4211a6009194ac27c2e6fc9830a370b3e4b635c572babaf3be"
+    },
+    {
+      "source": "C:\\Users\\hp-produccion\\.codex\\attachments\\b3284e9d-7020-48ba-a2a1-cccc430221f9\\Texto pegado.txt",
+      "copy": "evidence/sources/instrucciones-tfi-duplicado.txt",
+      "sha256": "a08e99d25d046a4211a6009194ac27c2e6fc9830a370b3e4b635c572babaf3be"
+    },
+    {
+      "source": "C:\\Users\\hp-produccion\\Downloads\\Propuesta_TFI_Blockchain_PoW_Silvia_Gomez_FINAL.pdf",
+      "copy": "evidence/sources/Propuesta_TFI_Blockchain_PoW_Silvia_Gomez_FINAL.pdf",
+      "sha256": "c785ae036e748e8e59a2fa7141c34a8d35a11bbd598d8889e02eb87b62e9e627"
+    },
+    {
+      "source": "C:\\Users\\hp-produccion\\Documents\\Codex\\2026-10-11\\astra-el-proxy-ya-est-funcionando\\outputs\\unlu-lab8-integrador\\entrega-definitiva-20261103\\CHECKLIST_FINAL.json",
+      "copy": "evidence/sources/CHECKLIST_LAB8_REFERENCIA.json",
+      "sha256": "264935c41435957f587c55393fc1aa2b748dafc9f0b19c724487aa9cdd921d0b"
+    }
+  ],
+  "baseline_files": [
+    {
+      "git_path": ".github/workflows/ci.yml",
+      "copy": "reference/lab8/.github/workflows/ci.yml",
+      "sha256": "9fd1bc46a177a351bacae3776f5d224b4237475d0c789c3317294b3bd33b5654"
+    },
+    {
+      "git_path": ".github/workflows/deploy.yml",
+      "copy": "reference/lab8/.github/workflows/deploy.yml",
+      "sha256": "59603386a509262c59a5af7ea74c526cae6983286b43badac3a20852aaed94a9"
+    },
+    {
+      "git_path": "README.md",
+      "copy": "reference/lab8/README.md",
+      "sha256": "d78206eaf7b65eb0bf9e3e294ba3430d64975b3d65b36933d361bd82677b7510"
+    },
+    {
+      "git_path": "helm/charts/pow/Chart.yaml",
+      "copy": "reference/lab8/helm/charts/pow/Chart.yaml",
+      "sha256": "813db39b5924b1c5ee3697fb85f054d001f1ab0c4d532def30208a17cc0b1c37"
+    },
+    {
+      "git_path": "helm/charts/pow/templates/_helpers.tpl",
+      "copy": "reference/lab8/helm/charts/pow/templates/_helpers.tpl",
+      "sha256": "d136e5ccb50b141aead4412198ed82248a39d3588d6b8dc217655036803ad4ff"
+    },
+    {
+      "git_path": "helm/charts/pow/templates/headless-service.yaml",
+      "copy": "reference/lab8/helm/charts/pow/templates/headless-service.yaml",
+      "sha256": "d7668b88fda592ac4a09b336784d17c55da2667c0c50f5223eae2eca328cce25"
+    },
+    {
+      "git_path": "helm/charts/pow/templates/service.yaml",
+      "copy": "reference/lab8/helm/charts/pow/templates/service.yaml",
+      "sha256": "dcef9318fbcd7c74c7624365ad8c7a46a06eaeceb24007e54917813c97274ba7"
+    },
+    {
+      "git_path": "helm/charts/pow/templates/statefulset.yaml",
+      "copy": "reference/lab8/helm/charts/pow/templates/statefulset.yaml",
+      "sha256": "483d4ab9e93aae8bbdf7a80291e2626fa2f048c60dc9616f50683b24ba2dfae3"
+    },
+    {
+      "git_path": "helm/charts/pow/values-k3s.yaml",
+      "copy": "reference/lab8/helm/charts/pow/values-k3s.yaml",
+      "sha256": "71da02cecd2dd6536891b6e3122ac246659e9f59d25a03fddd76db0b67f081c4"
+    },
+    {
+      "git_path": "helm/charts/pow/values.yaml",
+      "copy": "reference/lab8/helm/charts/pow/values.yaml",
+      "sha256": "c3c225a3a043712dcadf6492c6151c4f2f1a67ca00ff862da8fc008347f3fe6f"
+    },
+    {
+      "git_path": "labs/clase8/README.md",
+      "copy": "reference/lab8/labs/clase8/README.md",
+      "sha256": "182f9759158bb6ad4ed34b15c39cca5708de4a8550162701b05d07483d00775a"
+    },
+    {
+      "git_path": "labs/clase8/dashboard-pow.json",
+      "copy": "reference/lab8/labs/clase8/dashboard-pow.json",
+      "sha256": "e23e9055079c313221d9b2ac74bf0fe50fd72ebd818f73f9042cb956ea47cf81"
+    },
+    {
+      "git_path": "labs/clase8/namespace.yaml",
+      "copy": "reference/lab8/labs/clase8/namespace.yaml",
+      "sha256": "6ed5c38e0a794cfe099bc1a60dc6de98d1bee9cf7956bfeee8b36c8108fdc8ba"
+    },
+    {
+      "git_path": "labs/clase8/servicemonitor.yaml",
+      "copy": "reference/lab8/labs/clase8/servicemonitor.yaml",
+      "sha256": "d2eb4c1543590741bdcdfe52ca009df5d53b2b6618825516881fd33663021594"
+    },
+    {
+      "git_path": "labs/clase8/values-local.yaml",
+      "copy": "reference/lab8/labs/clase8/values-local.yaml",
+      "sha256": "de709fd66254aa6a6eb9f7c3adf4ef6210c00a4eb9a1332c480752ab946c060a"
+    },
+    {
+      "git_path": "labs/clase8/values-three-nodes.yaml",
+      "copy": "reference/lab8/labs/clase8/values-three-nodes.yaml",
+      "sha256": "8715e990207092f820c40432f23b1bf50478e1c08889bed5d8f8481758fd0d97"
+    },
+    {
+      "git_path": "loadtest/k6-script.js",
+      "copy": "reference/lab8/loadtest/k6-script.js",
+      "sha256": "3db7d841227ffb98617f4853499be2e30a288cdc9c76404f2c6fa56536c18c1c"
+    },
+    {
+      "git_path": "observability/dashboards/pow.json",
+      "copy": "reference/lab8/observability/dashboards/pow.json",
+      "sha256": "c562f03a9f6ffb0a93c198e6fcb299d3ab17ffefeebba1568638a0e587c43689"
+    },
+    {
+      "git_path": "observability/kube-prometheus-stack-values.yaml",
+      "copy": "reference/lab8/observability/kube-prometheus-stack-values.yaml",
+      "sha256": "bf75ff8e09c3a26a8e450c9d981fd5e6223a869e7bfe8a7a08dc3b3f4775c8ae"
+    },
+    {
+      "git_path": "pow/.dockerignore",
+      "copy": "reference/lab8/pow/.dockerignore",
+      "sha256": "ba542ef56d94a8588042cf6f6000c0e8570dc91e7cecf82821e257e2bb728df3"
+    },
+    {
+      "git_path": "pow/Dockerfile",
+      "copy": "reference/lab8/pow/Dockerfile",
+      "sha256": "eb3b5fb78a980ca68e52ec422c64963bd9425a573c5326e2b9303a23da56959a"
+    },
+    {
+      "git_path": "pow/README.md",
+      "copy": "reference/lab8/pow/README.md",
+      "sha256": "95106dbe24619a636f5888320fc0df5bd090c29cc47681c59c5f2fd20ff2186f"
+    },
+    {
+      "git_path": "pow/blockchain.py",
+      "copy": "reference/lab8/pow/blockchain.py",
+      "sha256": "7929885cf0d70dac899edd68bbe02ab5f7defab694f64e4d2635e8c3673f90c8"
+    },
+    {
+      "git_path": "pow/node.py",
+      "copy": "reference/lab8/pow/node.py",
+      "sha256": "4bd30b0f343b2fb2bf0833b653a86c1f382a004580bdea7f3552bcb170bf1b2f"
+    },
+    {
+      "git_path": "pow/requirements.txt",
+      "copy": "reference/lab8/pow/requirements.txt",
+      "sha256": "b88fa3a49b1d3eb3a662ef2f3c6e365b4b5e6cea95fe56b92d7c12d0dc289967"
+    },
+    {
+      "git_path": "pow/tests/conftest.py",
+      "copy": "reference/lab8/pow/tests/conftest.py",
+      "sha256": "caddbd9f83b491f74d92fc33e50b1e0571b8cd996098e37c054505c02b48c600"
+    },
+    {
+      "git_path": "pow/tests/test_blockchain.py",
+      "copy": "reference/lab8/pow/tests/test_blockchain.py",
+      "sha256": "65e998ffd2978503ac3dcc2fd656951a37b10f5672898b2f883c31ba19aaa529"
+    },
+    {
+      "git_path": "pow/tests/test_node.py",
+      "copy": "reference/lab8/pow/tests/test_node.py",
+      "sha256": "27deb59c7d8c3303f17f880c8ec123dc325ba17603f77b107e5a0683da8c6e6f"
+    },
+    {
+      "git_path": "terraform/envs/dev/main.tf",
+      "copy": "reference/lab8/terraform/envs/dev/main.tf",
+      "sha256": "f5f5263da7016c797b2601f1372fdc5c43ddcfaced6b15f1555520d5218a3c79"
+    },
+    {
+      "git_path": "terraform/modules/artifact-registry/main.tf",
+      "copy": "reference/lab8/terraform/modules/artifact-registry/main.tf",
+      "sha256": "379640703954e3c3bab6697f80d8d0a30729e2aec7d70dcf22495efd1a1fe3d6"
+    },
+    {
+      "git_path": "terraform/modules/artifact-registry/outputs.tf",
+      "copy": "reference/lab8/terraform/modules/artifact-registry/outputs.tf",
+      "sha256": "b506585600c83b2f7894fcc379cf84cee2078c3735b145ddc1d237867df4dd4c"
+    },
+    {
+      "git_path": "terraform/modules/artifact-registry/variables.tf",
+      "copy": "reference/lab8/terraform/modules/artifact-registry/variables.tf",
+      "sha256": "cfaddadcacd90db9f47782dddc2382bccdb6c5591bf0dba50a4e6f0bb937d7f5"
+    },
+    {
+      "git_path": "terraform/modules/artifact-registry/versions.tf",
+      "copy": "reference/lab8/terraform/modules/artifact-registry/versions.tf",
+      "sha256": "1feb4ac7200194839b2ece867003980f2f3f126a103c897b42a28b553fcf3bfb"
+    },
+    {
+      "git_path": "terraform/modules/gke/main.tf",
+      "copy": "reference/lab8/terraform/modules/gke/main.tf",
+      "sha256": "b6039323b814449035499fd1a563429952d2473b80a5f740fd0c6ae345144b43"
+    },
+    {
+      "git_path": "terraform/modules/gke/outputs.tf",
+      "copy": "reference/lab8/terraform/modules/gke/outputs.tf",
+      "sha256": "f1c529035985467e9159b32c39670370f5d38775f280619272d61a8c51ce4756"
+    },
+    {
+      "git_path": "terraform/modules/gke/variables.tf",
+      "copy": "reference/lab8/terraform/modules/gke/variables.tf",
+      "sha256": "b2a1a9cec5aad06a5dda771a1398defbb7b8c6c0ad1e453e658f0ec943efcc1e"
+    },
+    {
+      "git_path": "terraform/modules/gke/versions.tf",
+      "copy": "reference/lab8/terraform/modules/gke/versions.tf",
+      "sha256": "1feb4ac7200194839b2ece867003980f2f3f126a103c897b42a28b553fcf3bfb"
+    },
+    {
+      "git_path": "terraform/modules/network/main.tf",
+      "copy": "reference/lab8/terraform/modules/network/main.tf",
+      "sha256": "610d38a1380bff956ce9c511f74b330d20cdda9b678084838f989b7f389c2b25"
+    },
+    {
+      "git_path": "terraform/modules/network/outputs.tf",
+      "copy": "reference/lab8/terraform/modules/network/outputs.tf",
+      "sha256": "33837621da782f542c03470799782c3c3e357bd99fd14f29b477bf4323324a2e"
+    },
+    {
+      "git_path": "terraform/modules/network/variables.tf",
+      "copy": "reference/lab8/terraform/modules/network/variables.tf",
+      "sha256": "14d857493166fffffdccea1371ade0753921c07c3c067a49ef9ed1742e0b434b"
+    },
+    {
+      "git_path": "terraform/modules/network/versions.tf",
+      "copy": "reference/lab8/terraform/modules/network/versions.tf",
+      "sha256": "1feb4ac7200194839b2ece867003980f2f3f126a103c897b42a28b553fcf3bfb"
+    }
+  ],
+  "baseline_status": "?? labs/clase5/\n?? labs/clase6/\n?? labs/clase7/\n",
+  "baseline_head": "d4b159c57e208a8a433ff6ac97b3b94098518aa0",
+  "baseline_remote": "https://github.com/silvitagomez572-alt/unlu-lab4-infra-cloud-template.git"
+}

@@ -1,0 +1,120 @@
+ARQUITECTURA PROPUESTA — PROTOCOLO v1 — 03/11/2026
+Estado: diseño y núcleo local. No despliegue ni comunicación entre nodos comprobados.
+
+1. ALCANCE Y CONFIANZA
+El circuito institucional informado por la estudiante es Mesa de Entrada → Dirección
+→ Departamento Legal → Bioestadística. Esta última prepara documentación, genera
+el identificador QR y responde mediante nota de entrega. El prototipo simulará el
+circuito con documentos, actores y eventos artificiales. No conecta sistemas del hospital.
+
+Escriben actores simulados de las distintas áreas; una política futura validará qué
+eventos puede registrar cada rol. El problema de confianza a estudiar es la modificación
+unilateral u omisión de registros por un operador, y la posibilidad de que un verificador
+externo contraste una copia sintética con el hash y su historia registrados. No se
+afirma que exista un conflicto institucional real entre áreas ni que estas ya operen nodos.
+
+Tres réplicas bajo una misma administradora no constituyen tres autoridades independientes.
+PoW educativo de baja dificultad no impide reescribir la cadena con suficiente cómputo,
+ni garantiza veracidad del documento de origen. Sin operadores con intereses independientes,
+una base de datos con auditoría y hashes encadenados puede ser una solución más simple.
+Blockchain se usa aquí para estudiar y medir ese modelo, no para prescribir una implantación clínica.
+
+2. REUTILIZACIÓN Y SEPARACIÓN
+Se parte de Block/header/compute_hash del Lab 8 y de su contrato de servicio HTTP.
+Se conservan como referencia sus charts StatefulSet, headless Service, PVC, probes,
+ServiceMonitor, dashboard, módulos GKE/red/registro y CI. No se copian como configuración
+activa porque todavía apuntan al esquema de tres cadenas independientes o a imágenes y
+recursos ajenos al TFI. Los manifiestos futuros usarán nombres tfi-hospital, un namespace
+exclusivo y DATA_DIR/PVC exclusivo por nodo. Nada escribe en bc-clase8 ni en sus volúmenes.
+
+3. NÚCLEO IMPLEMENTADO LOCALMENTE
+Bloque inmutable: index, previous_hash, transactions, timestamp, difficulty, nonce,
+hash y network_hash. timestamp es entero en milisegundos Unix; no hay floats en consenso.
+network_hash = SHA-256 del JSON canónico de todos los parámetros de NetworkConfig.
+Cambiar dificultad inicial, límites o algoritmo de red implica otra identidad y otro génesis.
+Se preserva la construcción JSON canónico + nonce decimal de la línea base, agregando
+difficulty y network_hash a los datos comprometidos por el hash. No se importan cadenas antiguas.
+
+La transacción solo admite UUIDv4 seudónimos, hash SHA-256, evento enumerado, timestamp,
+actor seudónimo y referencias opcionales a versión/hash previos. tx_id es SHA-256 del
+payload canónico con dominio de red. La misma transacción no puede reaparecer en una cadena.
+Cambiar timestamp o campos crea otro tx_id: impedir repeticiones semánticas requiere la
+política documental y de firmas pendiente. El esquema cerrado rechaza texto libre y documentos.
+
+Génesis: timestamp configurado, sin transacciones, previous_hash de ceros, dificultad
+inicial y primer nonce válido. Se mina de forma determinista con un presupuesto finito y
+se cachea; no se acepta un génesis alternativo. El timestamp cero del perfil de prueba es
+un ancla de protocolo, no la fecha de un hecho institucional. Antes de una red experimental
+se fijará una configuración común y un génesis exportado; no cambiarla durante una corrida.
+
+4. DIFICULTAD Y TRABAJO
+d es la cantidad de ceros hexadecimales iniciales requerida. Trabajo esperado de un
+bloque válido = 16**d. Es una medida de trabajo esperado, no intentos reales de un minero.
+La suma incluye el mismo génesis para todos los candidatos válidos de la misma red.
+
+Ventana W=4 e intervalo objetivo T=10 s por defecto. Antes de minar la altura W+1,
+y cada W bloques después, se calculan W intervalos ya registrados:
+  elapsed = timestamp(h-1) - timestamp(h-1-W), expected = W*T.
+Si elapsed < expected/2: subir d en uno; si elapsed > 2*expected: bajar en uno;
+en igualdad conservarla. Aplicar límites min/max de NetworkConfig. Cada bloque recibido
+debe declarar exactamente el valor derivado de su prefijo. Nunca aceptar el valor elegido
+libremente por un peer. El tiempo local perf_counter mide duración del minado y NO
+interviene en la regla de consenso. El minado se detiene por intentos o timeout.
+
+Los timestamps deben ser crecientes y enteros; falta la política de admisión temporal
+frente al reloj de pared y su tolerancia de deriva. Este pendiente es relevante contra
+manipulación de dificultad; no presentar la regla educativa como resistente a adversarios.
+
+5. SELECCIÓN DE FORKS Y RED FUTURA
+choose_best_chain valida todos los candidatos, descarta inválidos, elige mayor trabajo
+y desempata por hash final lexicográficamente menor. Esa función pura ya está escrita;
+la convergencia de procesos distribuidos NO está implementada ni demostrada.
+
+La consigna usa “válida más larga” en sincronización; con dificultad variable se propone
+priorizar mayor trabajo para mantener coherencia con el diseño solicitado por la alumna.
+No son reglas equivalentes. Esta decisión debe quedar explicada y confirmada en revisión académica.
+
+Fase 2: tres servidores FastAPI independientes; DNS estable de StatefulSet, excluirse a
+sí mismo; GET /chain y notificaciones de transacciones/bloques. Un peer no define la red.
+Allowlist de destinos, solo protocolo/puerto previstos, sin redirects, timeouts conectarse
+2 s/leer 5 s, máximo 32 peers, respuesta <=4 MiB, cuerpo <=64 KiB y límites de cola.
+Estos valores son decisiones iniciales para validar, no controles HTTP ya implementados.
+Identificar mensajes por tx_id/hash, deduplicar y limitar reenvíos; no propagar hacia el
+remitente ni repetir indefinidamente. Sincronizar al arrancar y con frecuencia acotada.
+Descargar fuera del lock, validar y revalidar el tip al aplicar; cancelar/descartar un bloque
+minado sobre tip obsoleto. Mantener transacciones no incluidas tras reorganización, evitando
+replay, y volver a validar las reglas documentales. Registrar forks y convergencia.
+
+6. PERSISTENCIA Y CONCURRENCIA FUTURAS
+Un proceso escritor por nodo y por PVC; nunca varios workers compartiendo JSON. Adaptar
+la escritura atómica del Lab 8 para un snapshot de cadena+mempool+versión de esquema;
+temporal en mismo filesystem, flush/fsync, replace, fsync del directorio donde sea posible.
+Tratar corrupción como fallo explícito, no reemplazar por génesis silenciosamente.
+Usar lock para snapshot/commit, minado acotado fuera del lock y chequeo de tip al confirmar.
+Persistir antes de anunciar éxito; simular fallos de escritura y reinicios en tests específicos.
+No se ha implementado este componente en la primera entrega.
+
+7. EXTENSIÓN DOCUMENTAL Y QR
+Registrar la versión de un documento sintético y su relación con la versión/hash anterior.
+El historial debe diferenciar contenido/versiones de eventos administrativos que no modifican
+el archivo. El módulo local actual busca hashes y devuelve MATCH/MISMATCH/NOT_FOUND/CONFLICT;
+no valida aún toda la transición de versiones ni permisos de actor. La política del servicio
+documental deberá impedir redefinir una versión con distinto hash y exigir referencias existentes.
+
+Interfaz externa futura DocumentStore: put/get/delete de blobs exclusivamente sintéticos,
+desacoplada del libro; la cadena guarda hash e identificadores, no el blob. Verificador externo
+recalcula el hash de la copia recibida y valida cadena/bloque. Una coincidencia no certifica
+autoría, fecha legal ni integridad del archivo original después de registrarlo.
+La solicitud nueva incluye identificadores QR temporales en fase 3: preparar solo el mecanismo
+off-chain de expiración/revocación y auditar su acceso. La DApp con interfaz QR continúa en
+Curso 4. Un QR no otorga seguridad por sí mismo; sus tokens no se publicarán en blockchain.
+
+8. DESPLIEGUE Y OBSERVABILIDAD FUTUROS
+Local k3s/k3d solo si hay recursos y autorización para entorno aislado. Final GKE obligatorio:
+Helm, mínimo dos nodos blockchain, pruebas con 1/3/5 réplicas. Las réplicas PoW no equivalen
+al número de VMs worker de Kubernetes: medir recursos para definir estos últimos.
+OpenTofu, proyecto/estado/registro exclusivos por definir; no reutilizar el destino GCP Lab 8.
+GitHub Actions/OIDC nuevo, condicionado a repositorio y rama autorizados. No claves permanentes.
+Prometheus/Grafana en ese despliegue; no sustituir evidencia GKE por capturas de procesos locales.
+Presupuesto y alertas no detienen automáticamente cargos. El plan de apagado/destrucción debe
+enumerar discos, IP, balanceadores, registro y almacenamiento residual, además del clúster.

@@ -1,0 +1,89 @@
+TFI UNLu — RECUPERACIÓN DEL SEGUNDO ENSAYO DE CONSENSO
+Preparación local del 03/11/2026. NO PUBLICADO / NO EJECUTADO.
+
+ESTADO
+A: BLOCKED por preflight de Windows; no se inició pytest ni ningún nodo.
+B: NOT RUN; pendiente de ejecutar en un entorno autorizado.
+No se asigna PASS ni FAIL funcional a ninguno de estos dos escenarios.
+El umbral sigue siendo 1 GiB disponible. Un ajuste transitorio a 832 MiB se
+revirtió sin ejecutar pruebas con ese valor; no se eliminó el registro del bloqueo.
+El motor aprobado blockchain/*.py se conserva por SHA-256.
+
+EJECUCIÓN PROPUESTA
+Repositorio exclusivo propuesto: silvitagomez572-alt/unlu-tfi-blockchain-hospital.
+No existe remoto configurado en la copia local; el nombre es una propuesta.
+Workflow: .github/workflows/tfi-consensus.yml, únicamente workflow_dispatch.
+Debe existir en la rama predeterminada del nuevo repositorio TFI para poder
+despacharlo; esto requiere autorización de publicación, no modifica main de Lab 8.
+Se exige indicar un commit completo de 40 caracteres y verificar el checkout.
+El borrador permite solo ese repositorio, público, y run_attempt=1.
+Dos jobs independientes A/B, matriz max-parallel=1, sin reintentos automáticos.
+Cada job usa una VM nueva ubuntu-24.04. Si A falla, B conserva su resultado
+independiente; no se reutiliza ningún estado ni se repite el escenario fallido.
+
+RECURSOS Y CORTES
+Python 3.12; FastAPI y pytest fijados en requirements-node/test.txt.
+No se instalan ni descargan dependencias en esta preparación local.
+Por escenario: pytest controlador + tres nodos HTTP de loopback, procesos distintos.
+Preflight MemAvailable >= 1 GiB; piso de seguridad 384 MiB; límite operativo
+192 MiB por proceso, muestreo RSS/privada cada 50 ms; timeout de prueba 90 s.
+En Linux este control muestreado NO equivale a un límite duro de cgroup.
+Los límites del Job Object de Windows no se presentan como portables a Ubuntu.
+Límite del job: 6 minutos. Máximo nominal de los dos jobs: 12 minutos, más
+eventual tiempo de cancelación/cierre del proveedor. Duración estimada: 4–8 min.
+Señales y timeout apagan solo el grupo creado por el supervisor; se verifica que
+no haya procesos activos en ese grupo. Una cancelación forzosa puede impedir
+conservar el artefacto; no se afirmará limpieza comprobada sin su registro.
+GitHub descarta la VM temporal al terminar. No Docker, Kubernetes ni GCP.
+
+ESCENARIO A — MAYOR TRABAJO, NO MAYOR LONGITUD
+Red: dificultad inicial 1, retarget cada 2 bloques, intervalo objetivo 1.000 ms.
+Cadena larga prevista: alturas 0–5, timestamps 0/3000/6000/9000/12000/15000.
+Cadena corta prevista: alturas 0–3, timestamps 0/100/200/300.
+Trabajo esperado incluyendo génesis: 96 frente a 304 (suma de 16**d).
+Estos son valores del diseño del fixture, NO resultados ejecutados.
+Los nodos 0/2 parten de la larga; el 1 de la corta. Tras habilitar HTTP,
+se exigen las tres cadenas completas idénticas a la candidata de mayor trabajo.
+
+ESCENARIO B — EMPATE Y ORDEN DE LLEGADA
+Dos forks válidos previstos de trabajo 304, con transacciones sintéticas distintas.
+Se calcula el menor hash final lexicográfico. Nodos 0/2 reciben primero ganador
+y luego perdedor; nodo 1 primero perdedor y luego ganador. Los enlaces dirigidos
+solo bloquean/permiten transporte HTTP, nunca generan respuestas de convergencia.
+Se verifican decisiones reales y cadenas completas. Es una muestra controlada
+de órdenes de llegada, no una demostración de todas las intercalaciones posibles.
+
+EVIDENCIA Y ACEPTACIÓN
+Validación completa, hash recalculado por bloque, dificultad esperada, prueba PoW,
+trabajo acumulado, estados HTTP completos antes/después, logs fork_choice,
+latencias observadas por polling cada 0,1 s, PID, memoria, JUnit y apagado.
+Las cadenas originales del fixture se preservan; cada nodo opera sobre su copia.
+SHA-256 de originales y artefactos, ZIP íntegro. Estados PASS solo tras ejecución,
+comparación completa y limpieza. Cualquier fallo o ausencia de evidencia se informa.
+Artefactos limitados a 2 MiB por job, retención 1 día, sin caché persistente.
+Descargar y verificar los dos artefactos antes del vencimiento.
+
+COSTOS POTENCIALES — CONSULTA OFICIAL DEL 03/11/2026
+GitHub estándar ubuntu-24.04 público: 4 vCPU, 16 GB RAM, 14 GB SSD;
+cómputo USD 0. En repositorio privado: 2 vCPU, 8 GB RAM; tarifa publicada
+USD 0,006/min fuera de la cuota. El workflow preparado BLOQUEA repos privados.
+Ejemplo privado: 12 min * 0,006 = USD 0,072; reserva ilustrativa 14 min = 0,084.
+No se comprobó cuota ni se autorizó gasto para el TFI. No usar el presupuesto
+histórico del Lab 8 como autorización automática de este proyecto.
+Almacenamiento fuera de cuota: USD 0,25/GiB-mes. 4 MiB por 1 día (mes 30 días)
+≈ USD 0,0000326, más variación de medición/redondeo. Dentro de cuota: USD 0.
+Para la opción pública se propone solicitar un máximo total de USD 0,01;
+no se ha gastado ni autorizado aquí. Los timeouts no son un límite financiero.
+
+Fuentes oficiales:
+https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+https://docs.github.com/en/billing/reference/actions-runner-pricing
+https://docs.github.com/en/billing/concepts/product-billing/github-actions
+
+PENDIENTES ANTES DE EJECUTAR
+1. Aprobar repositorio, visibilidad pública y archivos concretos para publicar.
+2. Autorizar creación/publicación/una ejecución y presupuesto de almacenamiento.
+3. Registrar el commit resultante y despachar exactamente ese commit.
+4. Validar instalación/resolución de dependencias en Ubuntu. AST/actionlint no
+   demuestran que pip ni /proc ni los nodos funcionen allí.
+5. Descargar artefactos, revisar decisiones y recalcular hashes antes de cerrar A/B.

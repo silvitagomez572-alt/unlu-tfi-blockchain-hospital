@@ -1,0 +1,50 @@
+PERSISTENCIA Y RED — FASE 2
+
+Cada Settings define node_id, data_dir absoluto, port, peers, network y frecuencia
+de sincronización. data_dir es exclusivo. state.json guarda un envelope:
+{payload:{schema:1,node_id,network_hash,chain,pending},sha256:SHA256(JSON canónico payload)}.
+El checksum detecta corrupción accidental; no constituye autenticación contra un atacante
+capaz de reescribir también el checksum. Se valida íntegramente la cadena al cargar.
+
+SnapshotStore conserva un lock de sistema operativo (.writer.lock) durante toda la
+vida del nodo: msvcrt en Windows, flock en POSIX. Un segundo escritor se rechaza.
+NodeState usa RLock para commits y un lock separado para minado. Se escribe temporal
+en el mismo directorio, flush+fsync y os.replace. En POSIX también fsync de directorio.
+En Windows la operación de reemplazo es atómica, pero no se promete supervivencia
+absoluta ante pérdida de energía/cache de disco. Se requiere backup y pruebas de filesystem
+en producción. Nunca sustituir automáticamente un estado corrupto por un génesis.
+
+La actualización de cadena y mempool ocurre en UN snapshot. Solo después de guardar
+se actualiza la memoria y se reconoce éxito HTTP. Si hay fallo de escritura, el nodo
+queda no saludable para evitar divergencia entre memoria y disco; inspeccionar/reiniciar.
+El temporal fallido creado por esa llamada se limpia; el snapshot previo no se elimina.
+La política de recuperación usa exclusivamente state.json validado, no un .tmp incompleto.
+
+Minado fuera del lock de escritura; snapshot inmutable de tip y lote. Antes de confirmar,
+volver a comparar tip bajo lock. Si cambió, descartar resultado con 409; no sobrescribir
+una cadena mejor. Cerrar el nodo toma lock y marca estado cerrado antes de liberar el
+lock del directorio, evitando escrituras tardías de tareas en shutdown.
+
+Fork choice: validar candidato completo fuera del lock, volver a compararlo con el
+estado actual bajo lock. Adoptar mayor trabajo y desempate por hash menor del motor.
+Eliminar del mempool lo confirmado en la nueva cadena, restaurar transacciones huérfanas
+de la anterior y deduplicar por tx_id. Si se excede max_pending, rechazar adopción con
+429 y registrar el bloqueo; no perder transacciones silenciosamente. Esa protección
+puede impedir convergencia bajo presión: documentar y resolver capacidad, no ocultarlo.
+
+Peers estáticos de loopback para esta etapa; sin DNS Kubernetes ni discovery dinámico.
+La lista vive en el archivo de configuración, separado del estado. Al reiniciar, se
+verifican identidad y red y se inicia sincronización. El resultado de sincronización
+es estado operativo en memoria; comienza en starting en cada reinicio. Los logs registran
+los intentos. No se simula que un estado histórico synced siga vigente después de arrancar.
+
+La propagación es best-effort con deduplicación y TTL. La sincronización periódica
+complementa pérdidas de mensajes, lee chain y pending de peers permitidos, y valida
+ambos. No hay balance/moneda, firmas ni autenticación institucional en esta fase.
+Una partición puede originar ramas; después de sanar se compara trabajo verificable.
+No se garantiza convergencia frente a particiones permanentes, relojes fuera de tolerancia
+o mempool excedido. Las pruebas comprueban escenarios acotados, no seguridad bizantina completa.
+
+PVC LÓGICO: las pruebas reutilizan el mismo directorio persistente de un proceso
+reiniciado. Esto NO es una prueba de un recurso Kubernetes PersistentVolumeClaim.
+La validación Kubernetes/GKE continúa pendiente y no se ejecuta en esta fase.

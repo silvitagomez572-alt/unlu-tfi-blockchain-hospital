@@ -1,0 +1,32 @@
+API PREVISTA — NOT TESTED / NO IMPLEMENTADA TODAVÍA
+Cada ruta validará dominio de red y límites; no documento real, secreto ni texto libre.
+
+GET /healthz -> 200 liveness; no confundir con ready/sync. Proponer /readyz separado.
+GET /metrics -> 200 texto Prometheus; registro por instancia, sin IDs clínicos en labels.
+GET /chain -> 200 {network_hash, tip, cumulative_work, blocks}; limitar bytes/paginación.
+GET /blocks/{index} -> 200 bloque, 404 ausente, 422 índice inválido.
+POST /transactions -> 202 {tx_id,status:pending}; 409 duplicada; 422 inválida; 429 saturado.
+GET /transactions/pending -> 200 lista limitada; no exponer públicamente sin autorización.
+GET /peers -> 200 peers permitidos y estado; sin secretos ni topología pública innecesaria.
+POST /peers/sync -> 200 resumen de sincronización; 409 busy; 503 peers no disponibles.
+POST /mine -> 200 bloque/elapsed_seconds; 409 tip cambió/busy; 503 presupuesto agotado.
+POST /documents/register -> 202 tx_id y versión; solo fixture sintético autorizado.
+POST /documents/verify -> 200 MATCH/MISMATCH/NOT_FOUND/CONFLICT; no certificado legal.
+GET /documents/{document_id}/history -> 200 eventos/versiones o 404; acceso controlado futuro.
+
+Eventos previstos: NOTE_RECEIVED, DIRECTION_REVIEWED, LEGAL_REVIEWED,
+VERSION_PREPARED, QR_IDENTIFIER_ISSUED, DELIVERY_RECORDED.
+Permisos simulados previstos respectivamente: Mesa de Entrada, Dirección,
+Departamento Legal, Bioestadística (últimos tres). Los permisos NO están implementados.
+
+Ejemplo sintético de entrada futura de transacción:
+document_id=00000000-0000-4000-8000-000000000001
+version_id=00000000-0000-4000-8000-000000000002
+actor_id=00000000-0000-4000-8000-000000000003
+document_hash=SHA-256 de bytes de fixture sintético
+event_type=VERSION_PREPARED, timestamp=milisegundos Unix
+network_hash=huella de los parámetros, tx_id=hash canónico calculado
+Los UUID fijos son exclusivos de tests; en ejecución usar UUIDv4 aleatorios.
+
+Antes de publicar OpenAPI, resolver idempotencia, errores, autorización, firma opcional,
+paginas de cadena, detección de tip obsoleto y compatibilidad de versiones de protocolo.

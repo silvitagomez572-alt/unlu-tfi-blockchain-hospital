@@ -1,0 +1,13 @@
+{
+  "blockchain/block.py": "c6e3996dfe4c93e06f1388e565994394f532846fc3d1438244d805b031f644b6",
+  "blockchain/chain.py": "93b7d789f7e0fa5a38fac7a9200fc77bbba44de038630a96f7def7a9eeda2292",
+  "blockchain/config.py": "8ef423f532a2307a6c9c6603c780cdd5f820565761a39f61649c2bc83369f679",
+  "blockchain/consensus.py": "bb770601b0607f84790412259da7ae80c39c8e44bca8e4fc1e94efeb172fdcfe",
+  "blockchain/difficulty.py": "380b68d25f80a522c25b9b0e301e16989cdff390be48493e1cfbee010c8971f2",
+  "blockchain/document_integrity.py": "1bf043a67b6adea6c775252ddc0e28eab535c2fb144c8f0a3894a56838ad1cdb",
+  "blockchain/genesis.py": "210c535f30dffa606ecd378c9b1cf27b90788cd6b92d1ca6803f8486e82b29d4",
+  "blockchain/mining.py": "a48bb5a557825b2de6b3957e7e28fcd1c05d2ad64fad4c31d359d5ecc95fa658",
+  "blockchain/transaction.py": "e53a10c0c6135e7bcd33ff8445215a49e645dfde728ededa096f10fba46fbb64",
+  "blockchain/validation.py": "0c27b934368ae3d2cee7ad2519a2cb4b420a2e8e04f8daf7c1e597b71697862f",
+  "blockchain/__init__.py": "be68e5708322201a1c294bb0637f90e1210c70f3a4829616de4b94fa6eebedca"
+}

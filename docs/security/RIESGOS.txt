@@ -1,0 +1,51 @@
+RIESGOS Y CONTROLES — DISEÑO, NO CERTIFICACIÓN
+
+R01 Privacidad: hash de documento predecible permite diccionario; UUID/actor/tiempos pueden
+correlacionarse. Usar solo generador sintético, no hashes de archivos clínicos reales ni
+UUID derivados de DNI. Evitar publicar correlaciones y metadatos de infraestructura sensibles.
+Control presente: esquema sin campo documental/texto libre. Limitación: un esquema no
+demuestra que el hash provenga de datos sintéticos. Generador/control de admisión pendientes.
+
+R02 Identidad y permisos: actor_id es una declaración sin autenticación. Los eventos no
+demuestran intervención de un área. Pendiente mapa actor/rol, permisos por evento y pruebas
+de acceso denegado. Firmas Ed25519 son opcionales; no se presentan como implementadas.
+
+R03 Consenso: todos los nodos de una persona comparten administración. Bajo PoW facilita
+reescritura; no hay economía anti-Sybil, staking ni validación social de hechos. No afirmar
+descentralización institucional ni inmutabilidad absoluta.
+
+R04 Tiempo: timestamps crecientes no evitan datos artificialmente futuros ni veracidad
+de la fecha. Ajuste dinámico precisa límites de admisión temporal y pruebas de manipulación.
+perf_counter sirve para medir, no para consenso ni para fecha judicial.
+
+R05 Replay y versiones: rechazo de tx_id repetido implementado; nueva marca temporal puede
+producir otra identidad. Falta política de unicidad semántica, firma, versiones y reorganizaciones.
+El verificador detecta conflicto de hashes para una versión pero el motor aún no lo prohíbe.
+
+R06 Abuso de recursos: minado tiene presupuesto; cadenas y tx tienen límites de objetos.
+Pendiente límite de bytes antes de parsear JSON, rate limiting, backpressure, timeout de red
+y prueba de presión. La deserialización limitada no basta frente a payloads HTTP enormes.
+
+R07 SSRF y propagación: futuro allowlist de peers, DNS conocido, sin redirects, no URLs
+arbitrarias hacia metadata/cloud/loopback no autorizado; excluir self y deduplicar mensajes.
+Se requiere acceso interno al namespace, no exponer /mine ni peers públicamente.
+
+R08 Persistencia: el motor inicial es inmutable en memoria. Falta snapshot atómico de cadena
+y mempool, permisos de archivos, recuperación, revisión de archivos/symlinks y lock por escritor.
+Las pruebas de PVC Lab 8 no validan el almacenamiento del nuevo esquema.
+
+R09 QR: enlace permanente equivale a acceso persistente si actúa como bearer token. Tokens
+aleatorios off-chain, expiración, revocación, permiso por petición y logs sin tokens. No
+publicar el enlace/token en cadena ni usar nube personal con documentos reales.
+
+R10 Secretos/dependencias: sin credenciales en este proyecto; OIDC futuro requiere su propia
+condición y cuenta mínima. La confianza de Lab 8 no admite este remoto inexistente. Revisar
+licencias de la cátedra antes de distribución pública: no se encontró LICENSE raíz en el commit;
+las licencias de forge-std no se extrapolan al resto del template.
+
+R11 Costos: GKE/AR/almacenamiento y transferencia pueden facturar. Sin presupuesto nuevo ni
+autorización no aplicar infraestructura. No confundir los USD 0,01 del Lab 8 con crédito.
+
+R12 Alcance académico/legal: el registro no otorga validez judicial ni cadena de custodia
+legal automática. La ley provincial citada en la propuesta se conserva como antecedente
+del texto original; esta entrega técnica no constituye verificación ni dictamen normativo.

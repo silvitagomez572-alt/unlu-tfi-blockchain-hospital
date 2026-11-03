@@ -1,0 +1,44 @@
+REVISIÓN TÉCNICA DE LA PRIMERA ENTREGA — 03/11/2026
+
+Revisión del agente ejecutor, separada de la ejecución de tests; no auditoría externa.
+
+Correspondencia:
+- Fuente original preservada y vinculada al commit. Bloques de tres cadenas del Lab 8
+  no se importan a este nuevo protocolo con dificultad en cabecera.
+- Requisitos oficiales frente a propuesta diferenciados; archivos adjuntos duplicados
+  identificados por hash. Nuevos plazos/matriz y modelo de confianza documentados.
+- Los PASS se acotan a funciones probadas, no a red/HTTP/GKE. No hay funciones stub
+  que aparenten sincronización o firmas completas.
+
+Implementación:
+- Canonicalización estable, dificultad comprometida en hash, tipos estrictos (bool
+  rechazado como int en campos de consenso), estructuras inmutables.
+- Trabajo calculado solo después de validar cadena; pares (trabajo negativo, tip hash)
+  permiten desempate independiente del orden de llegada para cadenas con tips diferentes.
+- Tiempo de minado separado de timestamps de consenso; minado con presupuesto finito.
+- Verificador documental nunca produce recibo válido sobre una cadena inválida.
+- Validación recorre bloques y transacciones sin copiar prefijos completos en cada bloque.
+  Los parámetros de red se comprometen criptográficamente; todavía falta medir costo a escala.
+
+Pendientes de seguridad para siguientes fases:
+- Identidad/firma y autorización de actor, replay semántico, reglas de versiones.
+- Reloj de pared/deriva y resistencia a manipulación de dificultad.
+- Deserialización de red con tamaño máximo antes de parsear, timeouts, SSRF y rate limiting.
+- Persistencia conjunta, condiciones de carrera al cambiar tip y recuperación ante error.
+- No hay pruebas de integración, red, carga, cobertura medida ni auditoría adversarial completa.
+
+La comparación por mayor trabajo es una elección justificada para dificultad variable,
+distinta de “más larga” usada como regla ilustrativa en la consigna. Presentarla para
+revisión académica; no ocultar esa diferencia ni afirmar consenso distribuido ya logrado.
+
+Herramientas:
+- Runtime de tests reutilizado en copia independiente; py.py faltante corregido antes
+  de ejecutar casos. No instalar paquetes ni tocar el entorno original.
+- Supervisor registra memoria, timeout, PID y XML. El primer bloqueo y error de importación
+  se conservan como historial. No repite las 56 pruebas de Lab 8.
+
+Procedencia jurídica y datos:
+- No se usaron historias clínicas ni documentación real. La referencia legal de la
+  propuesta no acredita cumplimiento normativo ni autoriza datos personales.
+- Las simulaciones de roles y verificación externa son hipótesis del diseño, no hechos
+  verificados sobre administración, disputas o controles de un hospital.

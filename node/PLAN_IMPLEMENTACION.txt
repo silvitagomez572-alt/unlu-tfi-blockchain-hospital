@@ -1,0 +1,8 @@
+NO HAY SERVIDOR ACTIVO TODAVÍA.
+app.py compondrá rutas, servicios, repositorios y registro Prometheus por instancia.
+routes/: health/metrics, chain/blocks, transactions, peers, mine y documents.
+services/: mempool, minado con control de tip, sincronización, difusión y documentos.
+schemas/: contratos Pydantic estrictos (extra=forbid) y límites de tamaño.
+No importar node.py de Lab 8: tiene estado global y DATA_DIR=/data.
+Un nodo = un proceso escritor, un directorio y un PVC.
+Fase 2 requiere tests de 3 procesos antes de marcar red/consenso distribuido PASS.

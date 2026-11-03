@@ -1,0 +1,71 @@
+API FASE 2 — IMPLEMENTACIÓN LOCAL, CONSULTAR RESULTADOS_FASE2.json PARA ESTADO PROBADO
+
+Un proceso por nodo. Uvicorn 127.0.0.1, un worker, sin reload; peers explícitos de
+loopback. No exposición externa, TLS, autenticación institucional ni uso clínico real.
+Config Pydantic extra=forbid, esquemas estrictos y errores sin repetir el cuerpo enviado.
+
+GET /healthz
+200 {status:"ok",node_id,pid}; 503 si almacenamiento falló. Comprueba estado local;
+no declara convergencia. GET /readyz devuelve 200 synced/isolated, 503 starting/degraded.
+
+GET /metrics
+200 Prometheus: pow_block_height, pow_mempool_transactions, pow_peers_connected,
+pow_mining_duration_seconds, pow_sync_total, pow_chain_adoptions_total,
+pow_peer_events_total, pow_validation_errors_total. Sin documento/actor como label.
+chain_adoptions incluye catch-up normal: NO se etiqueta cada adopción como un fork real.
+
+GET /chain
+200 {node_id,network_hash,tip,cumulative_work,blocks:[...]}. El cliente receptor valida
+la cadena, no confía en el cumulative_work declarado por el peer. Respuesta <=4 MiB.
+GET /blocks/{index}: 200 bloque; 404 ausente; 422 índice negativo/no entero.
+
+POST /transactions
+202 {tx_id,status:"pending"} únicamente después de persistir. Cuerpo: modelo Transaction
+del protocolo; tx_id opcional (se calcula si no está). 409 repetida o confirmada;
+422 estructura/red/timestamp inválido; 429 mempool completo; 503 persistencia fallida.
+GET /transactions/pending: 200 lista del snapshot persistido, máximo 256 por defecto.
+
+POST /mine
+200 {block,elapsed_seconds,attempts}; 409 si otro minado activo o cambió el tip;
+503 presupuesto de minado agotado o persistencia fallida. No parámetros libres de
+dificultad/nonce/timestamp: se derivan de red y estado local. Minado <=100000 intentos/1 s.
+Los pendientes recibidos durante el minado se conservan si no están en el lote minado.
+
+GET /peers
+200 {node_id,peers,sync:{state,last_success_ms,errors,adopted,reachable_peers}}.
+POST /peers/sync: 200 resultado del intento; errores por peer explícitos, no falso éxito;
+409 si ya hay un intento. Comparar cadenas después para demostrar convergencia global.
+
+POST /peers/blocks
+Ruta P2P adicional: cuerpo Block completo. 200 {adopted:true/false}; duplicado idéntico
+es idempotente, sin volver a transmitir. 409 si hay hueco/fork: recuperar cadena completa
+en el siguiente ciclo anti-entropía. 422 bloque inválido. Nunca adoptar por altura sola.
+
+CONTROL DE PROPAGACIÓN
+X-TFI-Hops entero 0..3, decrementado; transacciones y bloques se reenvían solo si
+son nuevos/adoptados. Cola de 128 mensajes. El header limita reenvíos, NO autentica.
+Anti-entropía cada 3 s (configurable 0,5..60) recupera cadenas y transacciones pendientes
+perdidas en una partición; no depende exclusivamente de una cola volátil.
+8 peers máximo, 4 conexiones HTTP, trust_env=False y sin redirects. Timeout conexión
+0,5 s, lectura/escritura 1 s, solicitud total 2 s, ronda completa 6 s. Se recorren
+secuencialmente: los errores no bloquean indefinidamente una operación.
+La ronda puede quedar degraded; el próximo ciclo vuelve a intentar. No hay garantías
+de disponibilidad ante peers adversarios ni protección DDoS de producción.
+
+EXTENSIÓN DOCUMENTAL MÍNIMA
+POST /documents/register: acepta SOLO {fixture_id:1..10000,document_id,version_id,actor_id}.
+Genera bytes artificiales UNLU-SYNTHETIC-FIXTURE-xxxxx, calcula hash y registra evento
+VERSION_PREPARED. 202 pendiente, 409 si ya existe esa versión local (comprobación bajo lock).
+No acepta archivos ni texto clínico. No implementa todavía autorización de actor ni
+política completa de versiones del futuro sistema.
+POST /documents/verify: {document_id,version_id,document_hash}; devuelve la comprobación
+local del motor sobre cadena válida. MATCH no acredita identidad, control del documento
+ni validez judicial. GET /documents/{document_id}/history: eventos confirmados, 404 ausente.
+
+LÍMITES
+Cuerpo POST <=64 KiB y <=3 s de recepción; 413/408 según caso. Límite de concurrencia
+Uvicorn 16 conexiones/tareas; este límite no sustituye rate limiting por identidad.
+Timestamp recibido <=reloj local +30 s; tiempos históricos se validan por protocolo.
+La tolerancia de reloj es admisión local, no un cambio al hash ni a la regla del motor.
+El esquema cerrado no prueba el origen sintético de un hash enviado directamente.
+Solo fixtures artificiales están permitidos por la práctica.

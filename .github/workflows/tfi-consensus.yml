@@ -1,0 +1,77 @@
+name: TFI - ensayo aislado de consenso A y B
+
+# BORRADOR LOCAL. Publicacion y ejecucion requieren autorizacion posterior.
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Commit completo de 40 caracteres revisado y autorizado del TFI
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tfi-consensus-exclusive
+  cancel-in-progress: false
+
+jobs:
+  consensus:
+    # Destino propuesto, no creado ni publicado. Impide usar los repos de los labs.
+    if: >-
+      github.repository == 'silvitagomez572-alt/unlu-tfi-blockchain-hospital' &&
+      github.event.repository.private == false &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        scenario: [A, B]
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+      PIP_NO_CACHE_DIR: '1'
+    steps:
+      - name: Validar referencia antes del checkout
+        env:
+          APPROVED_COMMIT: ${{ inputs.source_commit }}
+        run: '[[ "$APPROVED_COMMIT" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, fijado por SHA
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - name: Registrar fuente y preparar dependencias sin cache
+        env:
+          APPROVED_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$APPROVED_COMMIT"
+          test -f evidence/phase2/APPROVED_CORE_SHA256.json
+          mkdir -p evidence/consensus-ci/setup
+          git rev-parse HEAD > evidence/consensus-ci/setup/commit.txt
+          python3.12 --version > evidence/consensus-ci/setup/python.txt
+          python3.12 -m venv .runtime/consensus-venv
+          .runtime/consensus-venv/bin/python -m pip install --disable-pip-version-check --retries 0 --timeout 15 -r requirements-node.txt -r requirements-test.txt > evidence/consensus-ci/setup/install.log 2>&1
+          .runtime/consensus-venv/bin/python -m pip check > evidence/consensus-ci/setup/pip-check.txt
+          .runtime/consensus-venv/bin/python -m pip freeze > evidence/consensus-ci/setup/packages.txt
+      - name: Ejecutar exclusivamente el escenario seleccionado
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+        run: .runtime/consensus-venv/bin/python -B tools/run_consensus_linux.py "$SCENARIO"
+      - name: Verificar evidencias y limitar artefacto
+        if: always()
+        id: evidence
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+        run: python3.12 -B tools/package_consensus_ci.py "$SCENARIO"
+      - name: Conservar artefacto por un dia
+        if: always() && steps.evidence.outputs.upload == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, fijado por SHA
+        with:
+          name: tfi-consensus-${{ matrix.scenario }}-${{ github.run_id }}
+          path: evidence/consensus-ci-export/${{ matrix.scenario }}
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 9

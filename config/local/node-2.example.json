@@ -1,0 +1,9 @@
+{
+  "node_id": "node-2",
+  "data_dir": "var/node-2",
+  "port": 19882,
+  "peers": ["http://127.0.0.1:19880", "http://127.0.0.1:19881"],
+  "network": {},
+  "sync_interval_seconds": 3.0,
+  "max_pending": 256
+}

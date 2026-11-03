@@ -1,0 +1,20 @@
+flowchart LR
+  A[Actores simulados: Mesa de Entrada / Dirección / Legal / Bioestadística]
+  A --> API[API futura: autenticación y política documental]
+  API --> STORE[DocumentStore futuro: solo documentos sintéticos fuera de cadena]
+  API --> N0[Nodo 0: mempool + PoW + validación]
+  N0 <--> N1[Nodo 1]
+  N1 <--> N2[Nodo 2]
+  N0 <--> N2
+  N0 --> P0[PVC 0]
+  N1 --> P1[PVC 1]
+  N2 --> P2[PVC 2]
+  N0 --> PROM[Prometheus]
+  N1 --> PROM
+  N2 --> PROM
+  PROM --> G[Grafana y alertas]
+  V[Verificador externo con documento sintético] --> API
+  GIT[Repositorio futuro autorizado] --> OIDC[CI/CD + OIDC]
+  OIDC --> AR[Artifact Registry exclusivo]
+  AR --> HELM[Helm / StatefulSet en GKE]
+  IAC[OpenTofu: pendiente de autorización] --> HELM

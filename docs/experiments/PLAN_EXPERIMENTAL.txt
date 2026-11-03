@@ -1,0 +1,28 @@
+PLAN EXPERIMENTAL — NO EJECUTADO
+
+Consigna vigente: 1/3/5 nodos × 3 dificultades × 1/2/5/10 transacciones concurrentes
+= 36 combinaciones obligatorias. Extensión: 50 y 150 concurrentes agregan 18;
+10 ya pertenece a la serie obligatoria. Total 54 escenarios únicos por repetición.
+Dificultades iniciales candidatas 1/2/3; calibrar sin cambiar parámetros durante una
+corrida. Son configuraciones distintas de red. Documentar dificultad efectiva por
+bloque y fases de ajuste: no confundir dificultad inicial con constante durante todo el ensayo.
+
+Cada escenario tendrá ID, semilla de fixtures sintéticos, configuración/huella,
+commit/digest, cantidad de procesos blockchain, tipo/cantidad de workers Kubernetes,
+región, recursos, límites, concurrencia, cantidad total de transacciones, warmup,
+duración, timeout y repeticiones. Estas últimas se definirán tras medir capacidad y costo.
+Concurrencia significa solicitudes simultáneas acotadas, no cantidad de workers K8s.
+
+Separar ensayo controlado comparable de régimen de ajuste dinámico. Una eventual
+política fija requiere versión de protocolo propia y no sustituye demostrar la dinámica.
+Registrar transacciones aceptadas/rechazadas/confirmadas, forks, trabajo acumulado,
+propagación, sincronización, recuperación, convergencia y latencias API.
+Usar reloj monotónico para duraciones locales; para latencias entre nodos, documentar
+sincronización de relojes y error. No equiparar timestamp de bloque con demora observada.
+Media y p50/p95/p99 con tamaño muestral; no interpretar p99 con unas pocas observaciones.
+Guardar datos crudos, errores, outliers y método de cálculo. No rellenar mediciones ausentes.
+
+Criterio de red: tras un período sin nuevas transacciones, todos los nodos sanos
+convergen al mismo tip/trabajo y validan la cadena; cada tx admitida aparece una sola vez
+o queda documentada como pendiente/rechazada. Simular partición/fork y reincorporación,
+reinicio de un nodo con mismo PVC y resincronización. No ejecutar hasta completar fase 2.

@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.runtime/
+.venv/
+.env
+.env.*
+!.env.example
+*.tfstate*
+*.tfplan
+.terraform/
+credentials*.json
+gha-creds-*.json
+node-data/
+var/
