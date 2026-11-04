@@ -1,0 +1,82 @@
+name: HISJB - one immutable image via OIDC
+on:
+  push:
+    branches: [tfi/despliegue-temporal]
+    paths: ['.github/workflows/tfi-image.yml']
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        type: string
+        required: true
+        description: Full reviewed TFI source commit
+      python_image:
+        type: string
+        required: true
+        description: Verified immutable Python base image
+permissions:
+  contents: read
+concurrency:
+  group: hisjb-image-exclusive
+  cancel-in-progress: false
+jobs:
+  register:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - run: echo 'Workflow registered; publication requires one authorized workflow_dispatch.'
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'silvitagomez572-alt/unlu-tfi-blockchain-hospital' && github.ref == 'refs/heads/tfi/despliegue-temporal' && github.run_attempt == 1
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PROJECT: unlu-tfi-hisjb-20261104
+      IMAGE: us-central1-docker.pkg.dev/unlu-tfi-hisjb-20261104/hisjb-tfi/hisjb
+    steps:
+      - name: Validate approved immutable source
+        env:
+          COMMIT: ${{ inputs.source_commit }}
+          BASE: ${{ inputs.python_image }}
+        run: |
+          test "$COMMIT" = '681343963bb0315f68ddd1e49855e1a8460eeb25'
+          test "$BASE" = 'python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - name: Build only reviewed HISJB source
+        env:
+          COMMIT: ${{ inputs.source_commit }}
+          BASE: ${{ inputs.python_image }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$COMMIT"
+          mkdir -p evidence/image
+          git rev-parse HEAD > evidence/image/commit.txt
+          docker build --platform linux/amd64 --build-arg "PYTHON_IMAGE=$BASE" -t "$IMAGE:$COMMIT" .
+          docker image inspect "$IMAGE:$COMMIT" --format '{{.Size}}' > evidence/image/size.txt
+          test "$(cat evidence/image/size.txt)" -le 524288000
+      - uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
+        with:
+          workload_identity_provider: projects/919344821395/locations/global/workloadIdentityPools/hisjb-github/providers/hisjb-provider
+          service_account: hisjb-image-writer@unlu-tfi-hisjb-20261104.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f
+      - name: Publish exactly one image and verify digest
+        env:
+          COMMIT: ${{ inputs.source_commit }}
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+          docker push "$IMAGE:$COMMIT"
+          gcloud artifacts docker images describe "$IMAGE:$COMMIT" --project "$PROJECT" --format=json > evidence/image/registry.json
+          sha256sum evidence/image/* > evidence/image-manifest.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hisjb-image-${{ github.run_id }}
+          path: |
+            evidence/image/
+            evidence/image-manifest.sha256
+          retention-days: 1
+          if-no-files-found: error
