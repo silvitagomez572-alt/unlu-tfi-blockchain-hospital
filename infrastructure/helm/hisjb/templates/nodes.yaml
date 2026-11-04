@@ -31,6 +31,9 @@ spec:
   replicas: {{ .Values.replicas }}
   serviceName: hisjb-headless
   podManagementPolicy: Parallel
+  # Difficulty/network experiments cannot mix incompatible protocol profiles.
+  # The bounded operator replaces only outdated HISJB pods, retaining all PVCs.
+  updateStrategy: {type: OnDelete}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Retain
     whenScaled: Retain
@@ -40,6 +43,7 @@ spec:
     metadata:
       labels: {app: hisjb, project: hisjb-tfi}
       annotations:
+        checksum/console: {{ printf "%s%s" (.Files.Get "console/index.html") (.Files.Get "console/app.js") | sha256sum }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "19980"
     spec:
@@ -79,6 +83,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            - {name: console, mountPath: /app/webconsole/static, readOnly: true}
             - {name: data, mountPath: /data}
             - {name: credentials, mountPath: /run/hisjb, readOnly: true}
             - {name: actors, mountPath: /config, readOnly: true}
@@ -94,6 +99,8 @@ spec:
             httpGet: {path: /healthz, port: http}
             periodSeconds: 10
       volumes:
+        - name: console
+          configMap: {name: hisjb-console}
         - name: credentials
           secret: {secretName: {{ .Values.credentialsSecret }}, defaultMode: 0440}
         - name: actors
@@ -127,4 +134,8 @@ spec:
       ports: [{protocol: TCP, port: 19980}]
     - to:
         - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+    # Exact DNS Service observed in the exclusive 10.74.0.0/24 service range.
+    - to:
+        - ipBlock: {cidr: 10.74.0.10/32}
       ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]

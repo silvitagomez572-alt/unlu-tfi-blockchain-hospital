@@ -1,0 +1,16 @@
+{
+  "utc": "2026-11-04T19:58:46.309376+00:00",
+  "status": "PASS",
+  "mandatory_executed": 36,
+  "mandatory_required": 36,
+  "mandatory_pass": 36,
+  "accepted_core": 162,
+  "confirmed_core_exactly_once": 162,
+  "accepted_lost": 0,
+  "accepted_duplicated": 0,
+  "core_source_hashes_unchanged": 11,
+  "original_screenshots_verified": 24,
+  "gke_screenshots": 12,
+  "scope": "Offline evidence validation; no tests repeated; no claim of institutional identity or five independent machines",
+  "exported_files_hash_verified": 56
+}

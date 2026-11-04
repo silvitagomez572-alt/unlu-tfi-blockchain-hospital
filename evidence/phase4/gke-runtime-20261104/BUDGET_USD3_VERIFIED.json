@@ -1,0 +1,31 @@
+{
+  "utc": "2026-11-04T19:44:08.101618+00:00",
+  "status": "PASS",
+  "project": "unlu-tfi-hisjb-20261104",
+  "currency": "USD",
+  "total_budget": 3,
+  "additional_budget": false,
+  "thresholdRules": [
+    {
+      "thresholdPercent": 0.5,
+      "spendBasis": "CURRENT_SPEND"
+    },
+    {
+      "thresholdPercent": 0.9,
+      "spendBasis": "CURRENT_SPEND"
+    },
+    {
+      "thresholdPercent": 1,
+      "spendBasis": "CURRENT_SPEND"
+    }
+  ],
+  "filter": {
+    "projects": [
+      "projects/919344821395"
+    ],
+    "creditTypesTreatment": "EXCLUDE_ALL_CREDITS",
+    "calendarPeriod": "MONTH"
+  },
+  "only_amount_changed": true,
+  "alerts_are_not_a_hard_cap": true
+}

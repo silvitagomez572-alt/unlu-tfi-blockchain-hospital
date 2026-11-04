@@ -1,8 +1,14 @@
+provider "google" {
+  alias                 = "budget"
+  project               = var.project_id
+  billing_project       = var.project_id
+  user_project_override = true
+}
 variable "approved_budget_usd" {
   type = number
   validation {
-    condition     = var.approved_budget_usd > 0 && var.approved_budget_usd <= 2
-    error_message = "Explicit authorization required, at most USD 2 for this prepared plan."
+    condition     = var.approved_budget_usd > 0 && var.approved_budget_usd <= 3
+    error_message = "Explicit authorization required, total ceiling USD 3 as of 2026-11-04."
   }
 }
 resource "google_project_service" "budget_api" {
@@ -11,6 +17,7 @@ resource "google_project_service" "budget_api" {
   disable_on_destroy = false
 }
 resource "google_billing_budget" "tfi" {
+  provider        = google.budget
   billing_account = var.billing_account
   display_name    = "HISJB temporary TFI - alert only, NOT a spending cap"
   budget_filter {

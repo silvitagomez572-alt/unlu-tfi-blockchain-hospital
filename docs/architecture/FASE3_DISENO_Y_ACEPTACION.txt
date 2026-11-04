@@ -1,0 +1,147 @@
+FASE 3 — DISEÑO PREVIO A IMPLEMENTACIÓN
+Fecha: 03/11/2026. Estado: preparado; no constituye evidencia funcional.
+Proyecto: unlu-tfi-blockchain-hospital. Exclusivamente documentos sintéticos.
+
+BASE QUE DEBE CONSERVARSE
+Commit publicado: 408e88f070fc7e1705dc5a4d60946eb295e9416c.
+Escenarios A/B ejecutados: GitHub Actions 41738438751.
+Mantener intactos blockchain/*.py, dificultad, trabajo acumulado y desempate.
+La nueva consigna exige ejecutar referencias antes de modificar módulos.
+El preflight de 2026-11-03T23:36:04Z registró 547024896 bytes disponibles;
+no inició pytest porque requiere 671088640 bytes. No es un fallo funcional.
+
+BRECHAS OBSERVADAS EN EL CÓDIGO LOCAL
+1. El núcleo ya reconoce los seis eventos administrativos; no valida su orden.
+2. NodeState.register_transaction rechaza cualquier segundo evento de una versión.
+3. /documents/register admite únicamente el evento VERSION_PREPARED de un fixture.
+4. /transactions y la recepción P2P no aplican permisos administrativos.
+5. La adopción de cadenas restaura pendientes ordenados por tx_id; ese orden no
+   garantiza la secuencia documental. No modificar el fork choice para resolverlo.
+6. gateway/grants.py persiste hashes de tokens, caducidad y revocación, pero no
+   contador de usos. Los tests preparados de gateway todavía no están acreditados.
+7. La API prevista no dispone aún de /documents/versions ni las rutas /qr exigidas.
+
+SEPARACIÓN PROPUESTA
+Mantener el motor PoW como dependencia. Incorporar un perfil documental local
+con reglas de aplicación, esquemas, autorización simulada y proyección de la
+cadena. El perfil tendrá identidad de red propia y almacenamiento independiente.
+No migrar ni reescribir las cadenas originales de las fases 1 y 2.
+
+Las reglas documentales se aplicarán en cuatro lugares: admisión local/P2P,
+validación de una cadena candidata, persistencia y recuperación al reiniciar.
+Después de validar esas reglas, se reutiliza el consenso aprobado para elegir
+mayor trabajo acumulado y, en empate, el menor hash final lexicográfico.
+No basta con filtrar las rutas /documents: /transactions y /peers/blocks también
+deben quedar protegidas frente a un bypass de permisos o de secuencia.
+
+CIRCUITO PROPUESTO POR VERSIÓN
+NOTE_RECEIVED          Mesa de Entrada
+DIRECTION_REVIEWED     Dirección
+LEGAL_REVIEWED         Departamento Legal
+VERSION_PREPARED       Bioestadística
+QR_IDENTIFIER_ISSUED   Bioestadística
+DELIVERY_RECORDED      Bioestadística
+
+Cada paso requiere el anterior confirmado en una cadena válida. Una respuesta
+202 significa pendiente, no inclusión en bloque. Para simplificar concurrencia,
+permitir un solo evento pendiente por documento. Distintos documentos pueden
+tener pendientes independientes. Ante dos propuestas incompatibles, responder
+409; no sobrescribir la primera silenciosamente.
+
+VERSIONES Y REORGANIZACIONES
+Primera versión: sin referencia anterior. Nueva versión: identificador diferente,
+referencia a la última versión entregada y su hash, nuevo ciclo desde recepción.
+El hash y el enlace de una versión no cambian entre sus eventos. El historial
+se ordena por altura de bloque y posición de la transacción, con timestamp
+monótono por documento. Los UUID nunca se convierten en rutas del filesystem.
+La proyección debe detectar duplicación, saltos, eventos repetidos y enlaces
+inválidos incluso cuando cada bloque supera la validación criptográfica del motor.
+
+Después de un reorg, reconciliar pendientes contra la cadena ganadora: conservar
+solamente eventos cuyo predecesor esté confirmado y no entre en conflicto con un
+pendiente conservado. Preservar un registro de decisiones sin tokens ni documentos.
+No minar en orden arbitrario eventos huérfanos de varias etapas. La política de
+readmisión deberá ser explícita, determinista y cubierta por tests.
+
+COMPATIBILIDAD DEL MODELO
+API documental transaction_id corresponde a tx_id en el protocolo aprobado.
+previous_version_hash corresponde a previous_document_hash, acompañado por
+previous_version_id. No añadir campos al hash canónico del motor a escondidas.
+La metadata admitida será cerrada: perfil sintético, versión de esquema y rol
+administrativo derivado del evento. No aceptar texto libre. Explicar expresamente
+qué campos son proyecciones derivadas y cuáles están serializados en la cadena.
+Si se requiere metadata arbitraria comprometida criptográficamente, será otra
+versión de protocolo y requerirá un cambio justificado; no está implementada aquí.
+
+REGISTRO Y VERIFICACIÓN
+Registrar mediante identificadores de fixtures sintéticos controlados; calcular
+SHA-256 localmente. No aceptar archivos clínicos ni texto documental en HTTP.
+El verificador acepta un hash de archivo calculado por el cliente y consulta una
+cadena completamente validada. Devolver hash presentado, hashes registrados,
+documento, versión, bloque/altura, timestamp y MATCH/MISMATCH/NOT_FOUND/CONFLICT.
+No confundir hash presentado por el cliente con hash recalculado por el servidor.
+Ofrecer cálculo local únicamente sobre fixtures sintéticos para la demostración.
+
+PERMISOS SIMULADOS
+Claves efímeras de prueba por rol mediante entorno, comparación constante y
+actor seudónimo asignado por configuración, no elegido libremente por el cliente.
+Separar credencial de peer y credenciales administrativas; las primeras no deben
+autorizar generación o revocación de QR. No registrar cabeceras Authorization.
+Las operaciones de lectura documental también requieren autorización. Los peers
+de esta fase siguen limitados a loopback. Sin TLS ni firmas por transacción, esto
+no acredita la identidad real del operador ni resiste a un peer autorizado malicioso.
+
+QR Y ESTADO OFF-CHAIN
+Token aleatorio de al menos 256 bits; persistir únicamente su SHA-256.
+Asociar internamente documento, versión, hash y transacción de emisión.
+Expiración acotada, revocación persistente y contador máximo de consultas.
+Un uso por defecto; incrementarlo atómicamente. Denegar tokens inválidos,
+expirados, revocados, inexistentes o agotados sin revelar cuál de esos casos ocurrió.
+El lector necesitará token y autorización de consulta. Aplicar rate limiting
+acotado, no introducir datos sensibles en etiquetas de métricas ni en logs.
+
+El URL/QR sólo contiene el token aleatorio. Preferir fragmento para la interfaz;
+la ruta GET /qr/{token} requerida se protegerá con no-store, no-referrer y access
+logs deshabilitados. Evitar almacenar URLs con tokens en evidencias y navegadores.
+El acceso consulta de nuevo la cadena: un registro QR auxiliar no prueba integridad.
+Si la emisión deja de estar confirmada por un reorg, suspender el acceso.
+Fallo parcial entre SQLite y mempool: denegar antes que entregar acceso sin evento.
+
+La revocación limita este servicio, no elimina los metadatos de las réplicas ni
+revoca copias previamente descargadas. El registro QR local no es alta disponibilidad;
+documentar su nodo emisor y recuperación, sin afirmar replicación de secretos.
+
+CAMBIOS MÍNIMOS PREVISTOS, AÚN NO APLICADOS
+- Punto de extensión opcional de create_app para el perfil documental; conservar
+  comportamiento por defecto de la API de Fase 2.
+- Módulos nuevos de reglas, proyección, esquemas y rutas del perfil documental.
+- Adaptación del almacenamiento de concesiones QR sólo después de sus referencias.
+- Tests separados de reglas, HTTP, QR y un ensayo de tres procesos independientes.
+- Launcher local sin Docker/Kubernetes y configuración separada de fases anteriores.
+
+CRITERIOS PARA EL ENSAYO DE INTEGRACIÓN
+Tres PIDs reales y tres directorios nuevos; dos versiones y seis eventos por versión.
+Enviar al nodo 1, comprobar mempools de 2/3, minar y sincronizar; comparar cadenas
+completas, no sólo alturas. Consultar historial y verificar hash en los tres nodos.
+Verificar MATCH, MISMATCH, eventos fuera de orden, duplicación y versión conflictiva.
+Emitir QR, confirmar evento, probar consulta, agotamiento y revocación. Reiniciar
+únicamente un proceso de este ensayo y comparar cadena, pendiente y registro QR.
+No alterar estados originales. Guardar PID, duración, memoria, decisiones y hashes.
+Apagar exclusivamente los procesos creados por el supervisor al finalizar.
+
+PRESUPUESTO DE PRUEBAS
+Referencias/unitarias: una selección por vez, 12 s, pila a 6 s, máximo 192 MiB
+por proceso, mínimo inicial 640 MiB libres; interrupción bajo 384 MiB libres.
+Integración: mínimo inicial 1 GiB, máximo 192 MiB por proceso, timeout 90 s,
+pila a 30 s, monitoreo cada 50 ms y mismo suelo de 384 MiB del sistema.
+No bajar umbrales. Si no se cumplen, BLOCKED y no crear procesos hijos.
+Una ejecución remota futura requiere paquete concreto y nueva autorización;
+la autorización de la corrida A/B 41738438751 ya fue utilizada.
+
+SECUENCIA DE TRABAJO
+1. Referencias existentes y hashes del motor; conservar resultados.
+2. Reglas y tests de aplicación; no tocar blockchain/*.py.
+3. Perfil HTTP y pruebas de permisos/bypass/tamaño/errores.
+4. QR con persistencia, expiración, límites y revocación verificadas.
+5. Ensayo real de tres procesos y reinicio, condicionado a recursos.
+6. API, privacidad, checklist y manifiesto; clasificar sólo evidencia ejecutada.

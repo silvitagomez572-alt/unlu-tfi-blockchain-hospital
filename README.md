@@ -1,131 +1,66 @@
-# UNLu · Trabajo Final Integrador · Blockchain hospitalaria sintética
+# HISJB Evidence Chain - TFI UNLu
 
-**Silvia Andrea Gómez Villagra · Individual · Curso 3**
+Silvia Andrea Gómez Villagra · Modalidad individual · Actualización 04/11/2026.
+Prototipo educativo de trazabilidad documental con datos exclusivamente sintéticos.
 
-Proyecto local independiente del Lab 8. Se agregó una API FastAPI por nodo,
-persistencia conjunta de cadena/mempool, propagación y sincronización P2P local.
-**No es un sistema apto para documentación clínica real ni un despliegue GKE.**
-El estado comprobado de esta fase está en `RESULTADOS_FASE2.json` y `INFORME_FASE2.txt`.
+## Resultado comprobado
 
-Consigna vigente: propuesta **10/11/2026**; entrega final **20/12/2026**.
-`INFORME_INICIO.txt` y `CHECKLIST_INICIO.json` conservan el estado histórico de fase 1.
-La copia de sus documentos/manifiesto está en `evidence/phase2/phase1-documents/`;
-el manifiesto vigente de esta fase es `MANIFIESTO_FASE2_SHA256.json`.
+Se ejecutó realmente en Google Kubernetes Engine, proyecto exclusivo
+`unlu-tfi-hisjb-20261104`, clúster temporal `hisjb-tfi-temp`, namespace `tfi-hospital`.
+Una VM e2-standard-4 alojó de uno a cinco nodos blockchain independientes, cada uno
+con FastAPI, un hilo minero y un PVC. No son cinco máquinas ni cinco operadores independientes.
+Matriz obligatoria: 36 PASS de 36 ejecutados / 36 previstos. Limpieza: PASS.
 
-## Procedencia
+La consola mostró transacciones reales, minería, bloques, coincidencia SHA-256,
+alteración detectada, historial y QR revocado. La persistencia sobrevivió a recrear
+`hisjb-0`: cambió el UID del pod, se conservó el UID del PVC y el estado fue idéntico.
+Prometheus registró hasta cinco targets UP. Grafana se ejecutó en el mismo GKE.
+Las capturas existentes son originales; las faltantes no se sustituyen por imágenes fabricadas.
 
-Base de la cátedra: `dpetrocelli/infra-cloud-template`, continuada en
-`silvitagomez572-alt/unlu-lab4-infra-cloud-template`, commit
-`d4b159c57e208a8a433ff6ac97b3b94098518aa0`.
-`reference/lab8/` conserva copias exactas de los archivos seleccionados, sin activar
-sus workflows ni aplicar sus configuraciones. `evidence/SOURCE_MANIFEST.json`
-registra los hashes y la correspondencia con los blobs Git.
+## Reproducibilidad
 
-`blockchain/block.py` conserva el enfoque del template: bloque, cabecera JSON
-canónica, SHA-256 y nonce. Se modularizan y extienden dificultad, validación y
-selección de cadenas; el formato nuevo **no es compatible** con las cadenas del Lab 8.
-La persistencia del adaptador de fase 2 reutiliza el patrón temporal + fsync + replace
-del template y agrega checksum, identidad, cadena/mempool juntos y lock por directorio.
+- Motor y API: `blockchain/`, `node/`, `documents/`; consola `webconsole/`.
+- Entrada de contenedor: `python -B -m deployment.cluster`; puerto interno 19980.
+- Docker: `Dockerfile`, dependencias fijadas, usuario 10001, healthcheck.
+- Helm: `infrastructure/helm/hisjb`; StatefulSet, headless Service, PVC y NetworkPolicy.
+- IaC: `infrastructure/opentofu/`; ejecución comprobada con Terraform 1.14.9.
+- CI/OIDC: `.github/workflows/tfi-image.yml`; la publicación real fue la corrida 41886329974.
+- Especificación de rutas: `docs/api/ENDPOINTS.md`.
+- Datos medidos: `MATRIZ_EXPERIMENTAL.csv`, resultados JSON y logs en `evidence/phase4/`.
 
-## Qué puede usarse ahora
+La imagen deriva de `681343963bb0315f68ddd1e49855e1a8460eeb25`, con digest
+`sha256:0d78467787e7d20d8b648a3b3887a5d848e880607a0f4296247343fe0377230a`.
+La identificación GKE de la consola y correcciones de Helm se aplicaron mediante
+ConfigMap/configuración, sin alterar el motor ni reconstruir esa imagen.
 
-- `NetworkConfig`: parámetros consensuados y huella de identidad de red.
-- `Block` / `Transaction`: modelos inmutables y metadatos sintéticos cerrados.
-- `mine_next`: minado local con presupuesto de intentos y tiempo, sin mutar la cadena.
-- `validate_chain`: estructura, génesis, enlaces, dificultad, prueba de trabajo,
-  transacciones y rechazo de repeticiones exactas.
-- `choose_best_chain`: función pura de selección por trabajo acumulado y desempate.
-- `verify_document_hash`: búsqueda local y detección de coincidencia, alteración,
-  ausencia o conflicto de hashes para una versión. La API de fase 2 lo expone en
-  `/documents/verify`; el registro acepta solo fixtures sintéticos.
+## Demostración local
 
-No se implementaron firmas, permisos de actores, orden administrativo de eventos ni
-política completa de versiones. Los identificadores
-de actor no autentican a nadie. El indicador “sintético” es una regla operativa:
-un hash o UUID no demuestra por sí mismo que su origen no contenga datos personales.
-
-## Estructura
-
-```
-blockchain/        núcleo local y selección de forks
-node/             FastAPI, estado, snapshots, esquemas y transporte P2P
-tests/unit/       casos acotados del nuevo motor
-tests/integration/ ciclo multinodo aprobado y escenarios de consenso A/B pendientes
-infrastructure/   decisiones y contratos de variables; sin recursos aplicables aún
-docs/             arquitectura, API prevista, seguridad y experimentación
-reference/lab8/   referencia auditada, no aplicación activa
-evidence/         fuentes, trazabilidad y registros verificables
-tools/            preparación de fuentes, ejecución acotada y auditoría de archivos
-```
-
-## Reproducir las pruebas, cuando haya capacidad
-
-Python 3.12. El núcleo usa únicamente la biblioteca estándar. Pytest 8.3.5 se
-encuentra en `.runtime/test-tools` como copia local de herramientas ya instaladas;
-no se descargaron paquetes ni se modificó su instalación original. Para un equipo
-nuevo, preparar un entorno virtual independiente e instalar `requirements-test.txt`.
-
-Desde la raíz, con un Python 3.12 válido, ejecutar una invocación por vez:
+Con Python 3.12, dependencias y al menos 1 GiB disponible:
 
 ```powershell
-python -B tools/run_bounded_tests.py protocol
-python -B tools/run_bounded_tests.py validation
-python -B tools/run_bounded_tests.py forks_document
+python -B tools/serve_hisjb_demo.py --port 19980 --minutes 60
 ```
 
-El supervisor es específico de Windows y comprueba RAM antes de crear pytest.
-Si un grupo falla, se interrumpe o queda bloqueado, revisar su evidencia antes de
-continuar. No ejecutar las tres órdenes como lote automático. Requiere 640 MiB
-disponibles; límite de proceso 192 MiB; timeout 12 s; pila a los 6 s;
-interrupción si quedan menos de 384 MiB. Cada proceso pertenece a un Job Object
-propio; solo ese proceso puede ser terminado por el supervisor.
+Abrir `http://127.0.0.1:19980/console/`. Este supervisor mantiene los límites de RAM,
+sesión, Host/Origin y CSRF. Una URL documentada no implica que el servidor siga encendido.
+No repetir ensayos aprobados para abrir la aplicación. No aplicar IaC automáticamente:
+revalidar identidad del proyecto, permisos, cuota, plan y presupuesto.
 
-En otro sistema, ejecutar los mismos node IDs de `tools/run_bounded_tests.py`
-con pytest, pero con un supervisor de recursos equivalente. No se afirma que el
-supervisor Windows sea portable.
+## Procedencia y límites
 
-## Límites operativos
+Conservé el template `dpetrocelli/infra-cloud-template` en `reference/lab8/`,
+referencia `d4b159c57e208a8a433ff6ac97b3b94098518aa0`; no modifiqué Lab 8.
+Las cadenas del TFI tienen formato y reglas propios; no se reutilizan silenciosamente
+estados de Lab 8. Consenso: trabajo acumulado verificable y desempate lexicográfico.
+Los 35 tests de núcleo, 11 de API y A/B anteriores no se repitieron durante GKE.
 
-No hay remoto, commits, runners, builds ni recursos GCP creados por esta entrega.
-Los procesos locales de pruebas se crean bajo supervisor y se apagan al concluir.
-Las pruebas del Lab 8 son antecedentes, no resultados del TFI.
-La publicación remota, OIDC, Artifact Registry y GKE requieren autorización posterior.
-El presupuesto histórico de Lab 8 no es un presupuesto disponible para GKE.
+No hay granja de workers separada de las APIs. La matriz activa un minero por celda;
+los demás nodos validan y sincronizan. QR usa SQLite por nodo y no se replica por consenso.
+Los roles son simulados; no se afirma firma digital, validez judicial ni cumplimiento automático.
+La trazabilidad completa de rechazos con correlación durable requiere trabajo adicional.
+La consigna original conservada del 01/11 exige 1,3,5 nodos; tres dificultades;
+concurrencia 1,2,5,10. Las pruebas 50/101 son estrés adicional.
 
-La red HTTP local ya tiene evidencia de propagación, recuperación y reconvergencia.
-Restan los ensayos específicos A/B, Helm/GKE, CI/CD, observabilidad y matriz experimental.
-Consultar el backlog antes
-de avanzar. No se promete validez judicial, cadena de custodia legal ni cumplimiento
-normativo automático.
-
-## API y ejecución local de fase 2
-
-Consultar `docs/api/API_FASE2.txt`, `docs/architecture/PERSISTENCIA_P2P_FASE2.txt`
-y `docs/EJECUCION_LOCAL_FASE2.txt`. Los archivos `config/local/node-*.example.json`
-son ejemplos sin ejecutar: verificar los puertos y presupuesto antes de usarlos.
-Desde la raíz del proyecto, un proceso por configuración:
-
-```powershell
-python -B tools/start_local_node.py --config config/local/node-0.example.json
-```
-
-Repetir para las configuraciones 1 y 2 solo cuando esté autorizado y haya memoria.
-El wrapper utiliza las dependencias locales aisladas. No inicia otros nodos automáticamente.
-Las rutas `var/node-*` se resuelven respecto del directorio actual: ejecutar desde la raíz.
-
-Las pruebas se ejecutan mediante `tools/run_phase2_test.py` con un único node ID.
-No usar `run_bounded_tests.py` de fase 1 para repetir las 35 pruebas aprobadas.
-El supervisor espera hasta 15 s por el mínimo de memoria antes de iniciar; esa espera
-no amplía los 12 s del test unitario ni los 90 s de un escenario de integración.
-En el entorno restringido de Codex, asyncio puede bloquearse al crear su socketpair:
-los tests HTTP requieren permiso de loopback; no quitar timeouts para ocultar el fallo.
-
-## Recuperación del ensayo de consenso
-
-`docs/experiments/PLAN_RUNNER_CONSENSO.txt` y `.github/workflows/tfi-consensus.yml`
-preparan dos jobs Ubuntu aislados. Es un borrador sin publicar ni ejecutar.
-El preflight de integración conserva **1 GiB** como mínimo y no inicia nodos
-si no se cumple. A quedó BLOCKED por RAM; B continúa sin ejecución.
-La validación estática del workflow no acredita el resultado de consenso.
-La fecha objetivo personal de entrega es **06/11/2026**; la consigna adjunta
-vigente, modificada el 01/11, fija 20/12/2026 como fecha oficial.
+Consigna vigente conservada: propuesta 10/11/2026 y entrega final 20/12/2026.
+La fecha personal de cierre solicitada es 06/11/2026. Consultar checklist y PDF para
+los límites académicos; no confundir ejecución técnica con una aceptación de la cátedra.

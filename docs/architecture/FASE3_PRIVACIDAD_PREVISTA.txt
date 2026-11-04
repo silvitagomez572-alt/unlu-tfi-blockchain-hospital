@@ -1,0 +1,48 @@
+FASE 3 — REVISIÓN DE PRIVACIDAD Y SEGURIDAD PREVIA
+Estado: diseño y riesgos identificados; controles nuevos aún no probados.
+
+1. Seudonimización no equivale a anonimato. Reutilizar document_id y actor_id,
+   horarios, roles y enlaces de versiones permite correlacionar actividades.
+   En el ensayo todos esos valores y los documentos serán sintéticos.
+
+2. Un hash no cifra un documento. Un tercero con una copia puede calcularlo y
+   probar su presencia. Documentos de baja entropía admiten ataques por diccionario.
+   No utilizar hashes clínicos reales ni adjuntar notas judiciales al sistema.
+
+3. Cada nodo conserva metadatos. Los controles del portal no borran información
+   disponible para operadores de nodos ni copias ya extraídas. Los endpoints de
+   cadena, pendiente e historial requieren acceso controlado en el perfil documental.
+
+4. Las claves por rol serán credenciales efímeras de laboratorio; no prueban una
+   identidad institucional. Sin firma por transacción no hay prueba de autoría.
+   Un peer autorizado puede presentar una atribución falsa de actor. Documentar
+   ese límite; no convertir actor_id en una firma implícita ni en identificación legal.
+
+5. Los QR son portadores de un identificador secreto. Posibles fugas: historial,
+   capturas, logs de URLs, proxies, Referer y servicios externos de generación QR.
+   Generación local, sin terceros; token aleatorio, digest persistido, autorización
+   adicional de lectura, no-store/no-referrer y logs de acceso deshabilitados.
+   Conservar sólo evidencias de estado y hash de token, nunca tokens activos.
+
+6. Revocación y caducidad restringen consultas futuras al servicio. No revierten
+   accesos anteriores ni eliminan documentos descargados. El límite de usos debe
+   ser atómico y persistente; su prueba incluirá reinicio e intentos repetidos.
+   Bloquear expiración incluso ante retroceso de reloj observado. Un reloj local
+   no constituye timestamp externo certificado.
+
+7. No abrir archivos por nombres suministrados por el cliente. Los registros usan
+   fixtures permitidos y UUID canónicos. Limitar cuerpos, campos, longitud, colas,
+   tiempos de red y cantidad de consultas. Rechazar texto libre y claves desconocidas.
+
+8. Persistencia atómica reduce daños por fallo durante escritura, pero SHA-256
+   sin autenticación no protege frente a un administrador que reescriba datos y
+   recalcule checksums. Preservar originales ante corrupción y fallar cerrado.
+
+9. El verificador debe validar la cadena y volver a consultar el registro de
+   emisión en cada resolución QR. Una tabla SQLite auxiliar no puede certificar
+   la existencia de una transacción ni reemplazar la comprobación de bloques.
+
+10. No se afirma cumplimiento normativo, validez judicial, custodia legal,
+    confidencialidad institucional ni inmutabilidad del archivo original. El
+    prototipo necesita infraestructura institucional, gestión de identidades,
+    evaluación de seguridad y controles organizacionales antes de cualquier uso real.

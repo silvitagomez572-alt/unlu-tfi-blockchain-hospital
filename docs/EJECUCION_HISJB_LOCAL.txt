@@ -1,0 +1,70 @@
+HISJB EVIDENCE CHAIN — PROCEDIMIENTO DE DEMOSTRACIÓN LOCAL
+Fecha: 04/11/2026. Objetivo personal actualizado: 06/11/2026.
+Estado: conexión recuperada y dashboard capturado en Edge el 04/11/2026,
+12:55 Argentina. Recorrido completo con escrituras y reinicio PENDIENTE.
+
+DIAGNÓSTICO DE FAILED TO FETCH
+La consola y la API comparten http://127.0.0.1:19980. Los fetch usan rutas relativas
+/console/api/..., cookies same-origin y X-HISJB-CSRF. No requieren abrir CORS.
+Los dos session.json conservados muestran stop_reason=Windows memory floor y
+child_active_after_cleanup=false. El segundo terminó 04/11 a las 15:01:11 UTC
+(12:01:11 Argentina). La lectura de 15:10:10 UTC informó 1003,6 MiB disponibles,
+ninguno de los cuatro PID del demo presente, sin listener en 19980 y conexión
+rechazada en /healthz. La causa comprobada de ese fallo es backend detenido.
+No se atribuye a CSRF ni CORS un rechazo TCP. Los errores de consola/Network de
+Edge no pudieron completarse en aquella sesión. En la recuperación posterior,
+Edge mostró API conectada y datos reales, con captura PNG original; la consulta
+de errores/advertencias capturados de esa pestaña devolvió una lista vacía.
+Esto no sustituye una auditoría de todas las solicitudes de Network.
+
+RECURSOS
+No reiniciar servicios ajenos. Mantener aproximadamente 1 GiB estable disponible
+para demo y navegador. El supervisor de un nodo exige 1024 MiB al inicio, limita
+ese proceso a 192 MiB y lo detiene si Windows baja de 384 MiB. El mínimo de los
+ensayos multinodo sigue siendo 1 GiB; no se redujo. Ambos arranques reales usaron
+aproximadamente 72 MiB de RSS máximo muestreado del nodo, excluyendo Edge.
+
+ARRANQUE REPRODUCIBLE (EJECUTADO EL 04/11/2026, 12:45 ARGENTINA)
+Desde la raíz unlu-tfi-blockchain-hospital, con Python 3.12 y las dependencias del
+perfil disponibles en .runtime/runtime-tools:
+  python -B tools/serve_hisjb_demo.py --port 19980 --minutes 60
+En esta PC se utilizó el Python del runtime Codex. El supervisor genera credenciales
+efímeras en memoria; no pedirlas ni copiarlas. Usa configuración persistente en
+.runtime/hisjb-demo-config.json y datos en node-data/hisjb-demo/node-0.
+No borrar esos directorios para resolver un error de arranque.
+
+URL: http://127.0.0.1:19980/console/
+Health: http://127.0.0.1:19980/healthz
+Readiness: http://127.0.0.1:19980/readyz
+Frontend y backend los sirve el mismo proceso: no levantar un segundo frontend.
+Tras un reinicio, recargar la página para renovar cookie/CSRF. No reutilizar una
+pestaña con sesión anterior como si las credenciales fueran permanentes.
+
+SECUENCIA DE ACEPTACIÓN VISUAL PENDIENTE
+1. Abrir Edge en la URL exacta, ventana visible; comprobar Dashboard y fecha de lectura.
+2. Registro: UUID nuevos, fixture 1, registrar recepción. Guardar ID y estado pendiente.
+3. Dashboard: comprobar mismo ID en mempool. Minería: minar, anotar duración e intentos.
+4. Explorador: comprobar bloque/hash/tx y comparar historial con la operación anterior.
+5. Integridad: verificar hash original (MATCH). Calcular copia alterada en el navegador
+   y volver a consultar (MISMATCH). Ninguna operación altera el documento original.
+6. Continuar Dirección, Legal y Preparación; minar entre etapas para confirmar cada
+   predecesor. Emitir QR por 300 s y máximo 2 usos; minar el evento de emisión.
+7. Consultar una vez, revocar y comprobar denegación posterior. No capturar token
+   ni QR activo: contiene un acceso temporal. Capturar el estado después de revocar.
+8. Registrar entrega y minar. Para una segunda versión conservar referencias a la
+   versión/hash anteriores; repetir la secuencia sin sobrescribir la primera.
+9. Guardar tip, altura, mempool e historial antes del apagado propio y tras reinicio.
+   Comparar cadena completa y concesión revocada. No deducir persistencia solo por
+   ver una pantalla después de recargarla.
+10. Guardar capturas auténticas de las siete secciones, recibos y SHA-256.
+
+APAGADO PROPIO
+El supervisor admite el archivo STOP_REQUESTED dentro de la carpeta exacta de la
+sesión activa (evidence/phase3/demo/<timestamp>). Solo debe crearse para esa sesión
+identificada. Esperar session.json status=stopped y child_active_after_cleanup=false.
+No borrar snapshots ni QR. Si vencen los 60 minutos, se aplica el mismo apagado.
+
+CRITERIO DE CIERRE
+Los tests HTTP no sustituyen la navegación/capturas. Si falta memoria, no iniciar
+otro ciclo ni bajar umbrales: conservar la evidencia y mantener BLOCKED la demo.
+No considerar los datos anteriores vigentes mientras la API no responda.

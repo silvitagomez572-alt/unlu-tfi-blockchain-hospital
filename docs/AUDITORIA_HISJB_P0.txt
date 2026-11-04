@@ -1,0 +1,44 @@
+HISJB EVIDENCE CHAIN — AUDITORÍA PREVIA A LA INTERFAZ
+03/11/2026. Objetivo personal actualizado: 07/11/2026.
+Alcance: TFI local independiente; no modificar el Laboratorio 8.
+
+Componente | Estado comprobado | Evidencia | Problema/acción | Prioridad
+Motor PoW | PASS: 35 referencias reejecutadas | evidence/tests/20261103T233916444330Z-protocol, 233918652512Z-validation, 233920488107Z-forks_document | preservar blockchain/*.py | P0
+API/persistencia Fase 2 | PASS: 11 referencias | evidence/phase2/tests/20261103T233938... a 234051... | punto opcional de extensión para perfil documental | P0
+HTTP referencia | timeout inicial; revalidación PASS | 234015585348Z y 234051443844Z | conservar ambos; no ocultar timeout de carga | P0
+Consenso distribuido | PASS histórico A/B | corrida 41738438751 y 134 verificaciones | no repetir ni publicar otra corrida | P1
+Circuito documental | PASS: 11 casos unitarios | evidence/phase3/tests/test_documents | falta integración con tres procesos en este perfil | P0/P1
+QR persistente | PASS: 7 casos unitarios | evidence/phase3/tests/test_document_qr | registro local, no replicado; controles de acceso simulados | P0
+API documental | PASS: 3 tests HTTP compuestos | evidence/phase3/tests/test_document_api | falta interfaz y ensayo documental de tres procesos | P0
+Interfaz web | NOT TESTED / no implementada al comenzar auditoría | no frontend integrado previo | construir vista real conectada, no maqueta | P0
+Worker PoW | un hilo por operación, lock por nodo, presupuesto 1 s/100000 intentos | node/state.py y blockchain/mining.py | no cola distribuida ni despliegue de workers separados; cancelación por presupuesto, no botón de aborto | P1
+Persistencia | snapshot atómico de cadena+mempool y SQLite de QR | pruebas de reinicio/escritura/corrupción | no base hospitalaria; no identidad institucional | P0
+Docker TFI | NOT TESTED / no Dockerfile propio | infrastructure sólo PLAN_DESPLIEGUE.txt | preparar después de aplicación visible; no confundir reference/lab8 con TFI | P1
+Kubernetes/Helm/OpenShift | NOT TESTED | sólo planificación | no desplegar; validar restricciones de red/usuarios/almacenamiento más adelante | P2
+CI TFI | PASS A/B del paquete congelado | commit 408e88f070fc7e1705dc5a4d60946eb295e9416c | cambios nuevos locales no publicados | P2
+Matriz APIs/workers | NOT TESTED | no corridas comparativas de esas arquitecturas | distinguir procesos de nodos, hilos mineros y workers independientes | P1
+
+ENDPOINTS IMPLEMENTADOS DEL PERFIL DOCUMENTAL
+GET /healthz, /readyz, /metrics, /chain, /blocks/{index}, /transactions/pending, /peers
+POST /transactions, /peers/blocks, /peers/sync, /mine
+POST /documents/register, /documents/versions, /documents/events, /documents/verify
+GET /documents/{document_id}/history
+POST /qr/create, GET /qr/{token}, POST /qr/{token}/revoke
+
+Todos los endpoints de datos requieren credenciales de rol/peer en este perfil.
+Health/readiness/métricas son públicos sólo en el binding local 127.0.0.1.
+Los roles son simulados. No constituyen firma digital ni identidad institucional.
+
+DECISIÓN P0
+Agregar una consola local al perfil documental. Reutilizar rutas y estado existentes,
+sin un motor alternativo. No exponer las credenciales de roles en JavaScript.
+Proteger acciones del navegador con Host/Origin, cookie de sesión local y CSRF.
+La consola será una demostración operada por el usuario local, no autenticación
+multiusuario hospitalaria. Mostrar explícitamente datos no medidos y componentes
+no implementados. Minería limitada al backend original.
+
+PRUEBAS PRÓXIMAS
+Pruebas de consola con HTTP y controles de acceso; regresión del punto de extensión;
+arranque local supervisado, revisión visual y operaciones sintéticas reales.
+Conservar capturas y registros. La fase documental no se declarará completa hasta
+verificar el intercambio de documentos entre tres procesos independientes.

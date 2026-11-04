@@ -1,4 +1,6 @@
 replicas: 3
+environment: gke
+projectId: unlu-tfi-hisjb-20261104
 image:
   repository: ""
   digest: ""

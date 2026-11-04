@@ -1,0 +1,7 @@
+{
+  "utc": "2026-11-04T19:59:58.118652+00:00",
+  "status": "PASS",
+  "isolated_authenticated_accounts": 0,
+  "other_sessions_modified": false,
+  "note": "Revoke command exited 0; its text output caused legacy JSON parser error. This independent auth list verifies revocation."
+}

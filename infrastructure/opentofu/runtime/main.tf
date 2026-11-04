@@ -89,6 +89,10 @@ resource "google_container_cluster" "tfi" {
   }
   logging_service    = "none"
   monitoring_service = "none"
+  monitoring_config {
+    enable_components = []
+    managed_prometheus { enabled = false }
+  }
   node_config {
     machine_type    = "e2-standard-4"
     disk_type       = "pd-standard"
