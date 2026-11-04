@@ -1,0 +1,34 @@
+DISEÑO PREVIO — NINGÚN ARCHIVO .tf ACTIVO NI MANIFIESTO APLICADO
+
+La referencia conserva módulos del template. No copiar envs/dev sin adaptación:
+puede crear VM/red/Artifact Registry bajo infra-cloud-dev y usar recursos previos.
+El módulo GKE requiere revisión de identidad del nodo, endpoint/API accesible,
+deletion_protection=false, release channel y versiones de proveedor.
+
+Variables requeridas para nuevo entorno: project_id (sin default), region, zone,
+cluster_name, network_name, registry_id, node_machine_type, node_pool_min/max,
+budget_amount/currency, budget_recipients, state_bucket, authorized_repo/ref,
+immutable_image_digest y storage_class. Ninguna contiene credenciales.
+Outputs: cluster/region, registry URL, WIF provider ID, SA email, namespace y
+referencia del estado. No emitir tokens, certificados privados ni secretos.
+
+Antes de aplicar: medir consumo por nodo/Prometheus/Grafana; elegir cantidad de
+workers y discos; presupuestar tarifa vigente, control plane, nodos, IP, tráfico,
+discos, AR y logs con duración de experimento. Comparar cuotas realmente disponibles.
+Presentar costo y recursos exactos, recibir autorización y generar plan revisable.
+No ejecutar init/plan/apply de cloud en esta etapa.
+
+Helm reutilizará chart pow, pero agregará imagen por digest, configuración de red
+idéntica, ServiceAccount propia, usuario no root, límites, NetworkPolicy, sondas
+liveness y readiness separadas, peers por DNS con self excluido y PVC por réplica.
+Namespace propuesto: tfi-hospital. No usar bc-clase8.
+
+CI futura: estática -> unit -> integration -> security -> build -> OIDC publicación
+controlada -> Helm -> smoke -> evidencia. Crear solo en remoto autorizado; workflow
+de Lab 8 permanece intacto. Persistir digest/commit/versión de configuración y resultados.
+
+Cleanup futuro: exportar registros y hashes, verificar copias, detener cargas,
+revisar plan de destroy del estado exclusivo, pedir autorización de eliminación,
+retirar recursos temporales de ese estado y auditar VMs/discos/IP/LB/registro.
+Conservar solo lo explícitamente autorizado con costo residual informado.
+Presupuesto actual autorizado para este TFI: ninguno; ejecución cloud BLOCKED.

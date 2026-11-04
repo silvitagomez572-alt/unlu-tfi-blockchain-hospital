@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hisjb
+description: Independent synthetic documentary PoW nodes; adapted from UNLu pow chart
+type: application
+version: 0.1.0
+appVersion: "0.3.0"

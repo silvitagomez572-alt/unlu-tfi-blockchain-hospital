@@ -1,0 +1,2 @@
+-r requirements-node.txt
+qrcode==8.2

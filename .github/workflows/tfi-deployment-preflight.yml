@@ -1,0 +1,75 @@
+name: HISJB - deployment preflight only
+on:
+  push:
+    branches: [tfi/despliegue-temporal]
+    paths:
+      - '.github/workflows/tfi-deployment-preflight.yml'
+      - 'deployment/**'
+      - 'tests/unit/test_cluster_profile.py'
+      - 'infrastructure/opentofu/**'
+      - 'infrastructure/helm/**'
+permissions:
+  contents: read
+concurrency:
+  group: hisjb-preflight-exclusive
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.repository == 'silvitagomez572-alt/unlu-tfi-blockchain-hospital' && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned test dependencies
+        run: |
+          mkdir -p evidence/deployment-preflight
+          git rev-parse HEAD > evidence/deployment-preflight/commit.txt
+          python3.12 -m venv .runtime/validation
+          .runtime/validation/bin/python -m pip install --disable-pip-version-check --retries 0 --timeout 20 -r requirements-documents.txt -r requirements-test.txt > evidence/deployment-preflight/install.log 2>&1
+          .runtime/validation/bin/python -m pip check
+      - name: One new bounded test, unchanged engine hashes
+        run: .runtime/validation/bin/python -B tools/run_cluster_profile_linux.py
+      - name: Download verified validation tools
+        run: |
+          mkdir -p .runtime/bin
+          cd .runtime/bin
+          curl --fail --silent --show-error --max-time 90 -O https://releases.hashicorp.com/terraform/1.13.4/terraform_1.13.4_linux_amd64.zip
+          curl --fail --silent --show-error --max-time 30 -O https://releases.hashicorp.com/terraform/1.13.4/terraform_1.13.4_SHA256SUMS
+          grep -E '  terraform_1.13.4_linux_amd64.zip$' terraform_1.13.4_SHA256SUMS | sha256sum --check --strict -
+          unzip -q terraform_1.13.4_linux_amd64.zip
+          curl --fail --silent --show-error --max-time 90 -O https://get.helm.sh/helm-v3.19.0-linux-amd64.tar.gz
+          curl --fail --silent --show-error --max-time 30 -O https://get.helm.sh/helm-v3.19.0-linux-amd64.tar.gz.sha256sum
+          sha256sum --check --strict helm-v3.19.0-linux-amd64.tar.gz.sha256sum
+          tar -xzf helm-v3.19.0-linux-amd64.tar.gz
+      - name: Provider schema validation without credentials or apply
+        run: |
+          TF="$PWD/.runtime/bin/terraform"
+          for part in bootstrap runtime; do
+            "$TF" -chdir="infrastructure/opentofu/$part" init -backend=false -input=false -no-color > "evidence/deployment-preflight/$part-init.log"
+            "$TF" -chdir="infrastructure/opentofu/$part" validate -no-color -json > "evidence/deployment-preflight/$part-validate.json"
+          done
+      - name: Helm static checks, no deployment
+        run: |
+          HELM="$PWD/.runtime/bin/linux-amd64/helm"
+          DIGEST="sha256:$(printf '%064d' 0)"
+          "$HELM" lint infrastructure/helm/hisjb --namespace tfi-hospital --set image.repository=static-validation-only --set "image.digest=$DIGEST" > evidence/deployment-preflight/helm-lint.txt
+          "$HELM" template hisjb infrastructure/helm/hisjb --namespace tfi-hospital --set replicas=5 --set image.repository=static-validation-only --set "image.digest=$DIGEST" > evidence/deployment-preflight/rendered-static.yaml
+      - name: Seal bounded non-secret evidence
+        if: always()
+        run: |
+          test "$(du -sb evidence/deployment-preflight | cut -f1)" -le 4194304
+          find evidence/deployment-preflight -type f -print0 | sort -z | xargs -0 sha256sum > evidence/preflight-manifest.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hisjb-preflight-${{ github.run_id }}
+          path: |
+            evidence/deployment-preflight/
+            evidence/preflight-manifest.sha256
+          retention-days: 1
+          if-no-files-found: error

@@ -49,7 +49,7 @@ class BodyLimit:
             return await receive()
         return await self.app(scope,replay,send)
 
-def create_app(settings):
+def create_app(settings, *, state_factory=NodeState, peer_factory=PeerManager):
     registry = CollectorRegistry()
     metrics = {
         'height':Gauge('pow_block_height','Committed local height',registry=registry),
@@ -63,8 +63,8 @@ def create_app(settings):
     }
     @asynccontextmanager
     async def lifespan(app):
-        state = NodeState(settings)
-        peers = PeerManager(state,metrics)
+        state = state_factory(settings)
+        peers = peer_factory(state,metrics)
         app.state.node, app.state.peers = state, peers
         peers.start()
         try:

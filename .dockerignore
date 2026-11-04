@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!requirements-node.txt
+!requirements-documents.txt
+!blockchain/**
+!node/**
+!documents/**
+!webconsole/**
+!deployment/**
+**/__pycache__/**
+**/*.pyc

@@ -1,0 +1,9 @@
+metric,type,unit,labels,collection,status
+pow_block_height,gauge,blocks,node,Committed local tip,NOT TESTED
+pow_mining_duration_seconds,histogram,seconds,node,perf_counter around each bounded mining attempt,NOT TESTED
+pow_peers_connected,gauge,peers,node,Healthy allowlisted peers within freshness window,NOT TESTED
+pow_sync_total,counter,attempts,node|result,Completed bounded synchronization attempt,NOT TESTED
+pow_forks_total,counter,forks,node,Detected differing valid tip event with deduplication,NOT TESTED
+pow_mempool_transactions,gauge,transactions,node,Pending validated unique transactions,NOT TESTED
+pow_api_request_duration_seconds,histogram,seconds,node|route|method|status,Middleware uses route template not raw identifiers,NOT TESTED
+pow_validation_errors_total,counter,errors,node|reason,Finite error vocabulary for rejected data,NOT TESTED

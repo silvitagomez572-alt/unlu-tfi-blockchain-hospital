@@ -1,0 +1,18 @@
+replicas: 3
+image:
+  repository: ""
+  digest: ""
+experiment: demo
+difficulty: 1
+difficultyMode: dynamic
+credentialsSecret: hisjb-credentials
+actorsConfigMap: hisjb-actors
+storageClass: hisjb-standard
+storageSize: 10Gi
+resources:
+  requests:
+    cpu: 100m
+    memory: 96Mi
+  limits:
+    cpu: 500m
+    memory: 192Mi
