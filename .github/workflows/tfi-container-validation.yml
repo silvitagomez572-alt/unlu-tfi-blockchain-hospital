@@ -1,0 +1,43 @@
+name: HISJB - isolated Docker and real browser validation
+on:
+  push:
+    branches: [tfi/despliegue-temporal]
+    paths:
+      - '.github/workflows/tfi-container-validation.yml'
+      - 'tools/run_container_validation.py'
+      - 'tools/container_browser_validation.py'
+permissions:
+  contents: read
+concurrency:
+  group: hisjb-container-exclusive
+  cancel-in-progress: false
+jobs:
+  container:
+    if: github.repository == 'silvitagomez572-alt/unlu-tfi-blockchain-hospital' && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PLAYWRIGHT_BROWSERS_PATH: '${{ github.workspace }}/.runtime/browsers'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install browser test tools only
+        run: |
+          mkdir -p evidence/container-validation
+          python3.12 -m venv .runtime/browser
+          .runtime/browser/bin/python -m pip install --disable-pip-version-check --retries 0 --timeout 20 playwright==1.56.0 > evidence/container-validation/browser-install.log 2>&1
+          .runtime/browser/bin/python -m playwright install chromium > evidence/container-validation/chromium-install.log 2>&1
+      - name: Build one image and demonstrate actual application
+        run: python3.12 -B tools/run_container_validation.py
+      - name: Enforce cleanup and seal non-secret artifacts
+        if: always()
+        run: python3.12 -B tools/run_container_validation.py --cleanup-and-seal
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hisjb-container-${{ github.run_id }}
+          path: evidence/container-validation/
+          retention-days: 1
+          if-no-files-found: error
